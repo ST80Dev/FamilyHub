@@ -1,0 +1,28 @@
+import type { Database } from './database'
+
+export type Tables = Database['public']['Tables']
+export type Enums = Database['public']['Enums']
+
+export type Family = Tables['families']['Row']
+export type FamilyMember = Tables['family_members']['Row']
+export type Person = Tables['persons']['Row']
+export type Vehicle = Tables['vehicles']['Row']
+export type Pet = Tables['pets']['Row']
+export type Deadline = Tables['deadlines']['Row']
+export type Subscription = Tables['subscriptions']['Row']
+export type Warranty = Tables['warranties']['Row']
+export type Voucher = Tables['vouchers']['Row']
+export type HomeMaintenance = Tables['home_maintenance']['Row']
+
+export type DeadlineType = Enums['deadline_type']
+export type DeadlineStatus = Enums['deadline_status']
+export type SubscriptionCategory = Enums['subscription_category']
+export type BillingCycle = Enums['billing_cycle']
+export type SubscriptionStatus = Enums['subscription_status']
+export type VoucherType = Enums['voucher_type']
+export type VoucherStatus = Enums['voucher_status']
+export type MaintenanceCategory = Enums['maintenance_category']
+export type MaintenanceIntervalType = Enums['maintenance_interval_type']
+export type MaintenanceStatus = Enums['maintenance_status']
+export type VehicleType = Enums['vehicle_type']
+export type MemberRole = Enums['member_role']
