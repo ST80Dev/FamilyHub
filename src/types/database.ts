@@ -751,6 +751,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      demote_family_to_personal: {
+        Args: { target_family: string }
+        Returns: Json
+      }
       generate_invite_code: { Args: never; Returns: string }
       is_family_member: { Args: { fid: string }; Returns: boolean }
       is_family_owner: { Args: { fid: string }; Returns: boolean }
