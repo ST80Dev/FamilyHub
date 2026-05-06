@@ -4,6 +4,7 @@ import { AppShell } from '../components/layout/AppShell'
 import { Button, Card, Chip } from '../components/ui'
 import { useAuth } from '../hooks/useAuth'
 import { useFamily } from '../hooks/useFamily'
+import { usePersons } from '../hooks/usePersons'
 import { useSubscriptions } from '../hooks/useSubscriptions'
 import { SubscriptionCard } from '../components/subscriptions/SubscriptionCard'
 import { SubscriptionForm } from '../components/subscriptions/SubscriptionForm'
@@ -21,6 +22,11 @@ export default function Subscriptions() {
   const { user } = useAuth()
   const { family, loading: famLoading } = useFamily()
   const { subscriptions, loading, refresh } = useSubscriptions()
+  const { persons } = usePersons()
+  const personById = useMemo(
+    () => new Map(persons.map((p) => [p.id, p])),
+    [persons],
+  )
   const [editing, setEditing] = useState<Subscription | null>(null)
   const [creating, setCreating] = useState(false)
 
@@ -146,6 +152,7 @@ export default function Subscriptions() {
               <SubscriptionCard
                 key={s.id}
                 subscription={s}
+                person={s.person_id ? personById.get(s.person_id) : null}
                 onClick={() => setEditing(s)}
               />
             ))}
@@ -166,6 +173,7 @@ export default function Subscriptions() {
               <SubscriptionCard
                 key={s.id}
                 subscription={s}
+                person={s.person_id ? personById.get(s.person_id) : null}
                 onClick={() => setEditing(s)}
               />
             ))}
@@ -186,6 +194,7 @@ export default function Subscriptions() {
               <SubscriptionCard
                 key={s.id}
                 subscription={s}
+                person={s.person_id ? personById.get(s.person_id) : null}
                 onClick={() => setEditing(s)}
               />
             ))}

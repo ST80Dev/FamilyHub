@@ -1,4 +1,4 @@
-import type { Subscription } from '../../types'
+import type { Person, Subscription } from '../../types'
 import { Card, IconTile, Badge } from '../ui'
 import {
   BILLING_CYCLE_LABEL,
@@ -7,9 +7,11 @@ import {
 } from '../../lib/subscriptionMeta'
 import { formatCurrency, formatDate } from '../../lib/format'
 import { daysUntil, nextBillingDate } from '../../lib/deadlineEngine'
+import { personAvatar } from '../../lib/personMeta'
 
 interface Props {
   subscription: Subscription
+  person?: Person | null
   onClick?: () => void
 }
 
@@ -27,7 +29,7 @@ function whenLabel(date: string): string {
   return `tra ${d} gg`
 }
 
-export function SubscriptionCard({ subscription, onClick }: Props) {
+export function SubscriptionCard({ subscription, person, onClick }: Props) {
   const meta = subscriptionMeta(subscription.category)
   const next = nextDate(subscription)
   const monthly =
@@ -46,13 +48,25 @@ export function SubscriptionCard({ subscription, onClick }: Props) {
       role={onClick ? 'button' : undefined}
       className="flex items-center gap-3"
     >
-      <IconTile tone={meta.tone} size="lg" inset>
-        <span aria-hidden>{meta.icon}</span>
-      </IconTile>
+      <div className="relative flex-shrink-0">
+        <IconTile tone={meta.tone} size="lg" inset>
+          <span aria-hidden>{meta.icon}</span>
+        </IconTile>
+        {person && (
+          <span
+            aria-label={person.display_name}
+            title={person.display_name}
+            className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-[color:var(--surface)] text-sm clay-sm"
+          >
+            {personAvatar(person)}
+          </span>
+        )}
+      </div>
       <div className="min-w-0 flex-1">
         <div className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">
           {meta.label}
           {subscription.provider && ` · ${subscription.provider}`}
+          {person && ` · ${person.display_name}`}
         </div>
         <div className="mt-0.5 truncate text-[15px] font-bold leading-tight text-ink">
           {subscription.name}
