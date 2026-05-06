@@ -5,8 +5,9 @@ import { supabase } from '../../lib/supabase'
 import { todayISO } from '../../lib/deadlineEngine'
 import { DEADLINE_META, DEADLINE_TYPES } from '../../lib/deadlineMeta'
 import { paymentMethodLabel } from '../../lib/paymentMethodMeta'
-import { useFamilyMembers } from '../../hooks/useFamilyMembers'
+import { personAvatar } from '../../lib/personMeta'
 import { usePaymentMethods } from '../../hooks/usePaymentMethods'
+import { usePersons } from '../../hooks/usePersons'
 import type { RecordScope } from '../../lib/ownership'
 import type { Deadline, DeadlineType } from '../../types'
 
@@ -29,7 +30,7 @@ interface FormState {
   amount: string
   amount_is_estimated: boolean
   payment_method_id: string
-  assigned_to_member_id: string
+  person_id: string
 }
 
 function initialState(d?: Deadline | null): FormState {
@@ -44,7 +45,7 @@ function initialState(d?: Deadline | null): FormState {
     amount: d?.amount != null ? String(d.amount) : '',
     amount_is_estimated: d?.amount_is_estimated ?? false,
     payment_method_id: d?.payment_method_id ?? '',
-    assigned_to_member_id: d?.assigned_to_member_id ?? '',
+    person_id: d?.person_id ?? '',
   }
 }
 
@@ -77,10 +78,8 @@ function DeadlineFormBody({ scope, initial, onClose, onSaved }: BodyProps) {
   const [state, setState] = useState<FormState>(() => initialState(initial))
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { members } = useFamilyMembers()
+  const { persons } = usePersons()
   const { paymentMethods } = usePaymentMethods()
-
-  const isFamilyScope = scope.family_id !== null
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -107,10 +106,7 @@ function DeadlineFormBody({ scope, initial, onClose, onSaved }: BodyProps) {
             ? state.amount_is_estimated
             : false,
         payment_method_id: state.payment_method_id || null,
-        assigned_to_member_id:
-          isFamilyScope && state.assigned_to_member_id
-            ? state.assigned_to_member_id
-            : null,
+        person_id: state.person_id || null,
       }
 
       const query = initial
@@ -148,23 +144,29 @@ function DeadlineFormBody({ scope, initial, onClose, onSaved }: BodyProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-        {isFamilyScope && (
-          <Field label="Per chi?" hint="Predefinito: tutta la famiglia">
-            <Select
-              value={state.assigned_to_member_id}
-              onChange={(e) =>
-                setState((s) => ({ ...s, assigned_to_member_id: e.target.value }))
-              }
-            >
-              <option value="">👪 Tutta la famiglia</option>
-              {members.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.display_name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-        )}
+        <Field
+          label="Per chi?"
+          hint={
+            persons.length === 0
+              ? 'Aggiungi i componenti del nucleo dalle Impostazioni'
+              : 'Predefinito: tutta la famiglia'
+          }
+        >
+          <Select
+            value={state.person_id}
+            onChange={(e) =>
+              setState((s) => ({ ...s, person_id: e.target.value }))
+            }
+          >
+            <option value="">👪 Generale / tutta la famiglia</option>
+            {persons.map((p) => (
+              <option key={p.id} value={p.id}>
+                {personAvatar(p)} {p.display_name}
+                {p.kind === 'pet' && p.species ? ` (${p.species})` : ''}
+              </option>
+            ))}
+          </Select>
+        </Field>
 
         <Field label="Tipo">
           <Select

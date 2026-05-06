@@ -5,6 +5,7 @@ import { Button, Card, Chip } from '../components/ui'
 import { useFamily } from '../hooks/useFamily'
 import { useDeadlines } from '../hooks/useDeadlines'
 import { useSubscriptions } from '../hooks/useSubscriptions'
+import { usePersons } from '../hooks/usePersons'
 import { DeadlineCard } from '../components/deadlines/DeadlineCard'
 import { WeeklyExpenses } from '../components/payment/WeeklyExpenses'
 import { useAuth } from '../hooks/useAuth'
@@ -62,6 +63,11 @@ export default function Dashboard() {
   const { family, membership, loading: famLoading } = useFamily()
   const { deadlines, loading: dlLoading } = useDeadlines()
   const { subscriptions: allSubs, loading: subLoading } = useSubscriptions()
+  const { persons } = usePersons()
+  const personById = useMemo(
+    () => new Map(persons.map((p) => [p.id, p])),
+    [persons],
+  )
   const subscriptions = useMemo(
     () => allSubs.filter((s) => s.status === 'active'),
     [allSubs],
@@ -226,7 +232,11 @@ export default function Dashboard() {
             </Card>
           )}
           {upcoming.map((d) => (
-            <DeadlineCard key={d.id} deadline={d} />
+            <DeadlineCard
+              key={d.id}
+              deadline={d}
+              person={d.person_id ? personById.get(d.person_id) : null}
+            />
           ))}
         </div>
       </section>

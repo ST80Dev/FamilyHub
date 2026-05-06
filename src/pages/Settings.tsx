@@ -6,6 +6,7 @@ import { useTheme } from '../hooks/useTheme'
 import { THEMES } from '../lib/theme'
 import type { Theme } from '../lib/theme'
 import { PaymentMethodsSection } from '../components/payment/PaymentMethodsSection'
+import { PersonsSection } from '../components/persons/PersonsSection'
 
 const THEME_LABEL: Record<Theme, string> = {
   pesca: 'Pesca',
@@ -83,6 +84,8 @@ export default function Settings() {
           </Link>
         </div>
       </Card>
+
+      <PersonsSection />
 
       <PaymentMethodsSection />
 

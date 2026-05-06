@@ -1,11 +1,13 @@
-import type { Deadline } from '../../types'
+import type { Deadline, Person } from '../../types'
 import { Card, IconTile, Badge } from '../ui'
 import { deadlineMeta } from '../../lib/deadlineMeta'
 import { daysUntil, urgencyBucket } from '../../lib/deadlineEngine'
 import { formatCurrency, formatDate } from '../../lib/format'
+import { personAvatar } from '../../lib/personMeta'
 
 interface Props {
   deadline: Deadline
+  person?: Person | null
   onClick?: () => void
 }
 
@@ -24,7 +26,7 @@ function urgencyTone(due: string) {
   return 'green' as const
 }
 
-export function DeadlineCard({ deadline, onClick }: Props) {
+export function DeadlineCard({ deadline, person, onClick }: Props) {
   const meta = deadlineMeta(deadline.type)
   const title = deadline.title?.trim() || meta.label
   const when = whenLabel(deadline.due_date)
@@ -39,12 +41,24 @@ export function DeadlineCard({ deadline, onClick }: Props) {
       role={onClick ? 'button' : undefined}
       className="flex items-center gap-3 cursor-default"
     >
-      <IconTile tone={meta.tone} size="lg" inset>
-        <span aria-hidden>{meta.icon}</span>
-      </IconTile>
+      <div className="relative flex-shrink-0">
+        <IconTile tone={meta.tone} size="lg" inset>
+          <span aria-hidden>{meta.icon}</span>
+        </IconTile>
+        {person && (
+          <span
+            aria-label={person.display_name}
+            title={person.display_name}
+            className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-[color:var(--surface)] text-sm clay-sm"
+          >
+            {personAvatar(person)}
+          </span>
+        )}
+      </div>
       <div className="min-w-0 flex-1">
         <div className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">
           {meta.label}
+          {person ? ` · ${person.display_name}` : ''}
         </div>
         <div className="mt-0.5 truncate text-[15px] font-bold leading-tight text-ink">
           {title}

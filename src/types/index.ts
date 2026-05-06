@@ -17,6 +17,7 @@ export type PaymentMethod = Tables['payment_methods']['Row']
 
 export type DeadlineType = Enums['deadline_type']
 export type PaymentMethodType = Enums['payment_method_type']
+export type PersonKind = Enums['person_kind']
 export type DeadlineStatus = Enums['deadline_status']
 export type SubscriptionCategory = Enums['subscription_category']
 export type BillingCycle = Enums['billing_cycle']

@@ -238,6 +238,7 @@ export type Database = {
       }
       persons: {
         Row: {
+          avatar_emoji: string | null
           birth_date: string | null
           comune_residenza: string | null
           created_at: string
@@ -245,11 +246,14 @@ export type Database = {
           family_id: string | null
           id: string
           is_minor: boolean
+          kind: Database["public"]["Enums"]["person_kind"]
           notes: string | null
           owner_user_id: string | null
+          species: string | null
           updated_at: string
         }
         Insert: {
+          avatar_emoji?: string | null
           birth_date?: string | null
           comune_residenza?: string | null
           created_at?: string
@@ -257,11 +261,14 @@ export type Database = {
           family_id?: string | null
           id?: string
           is_minor?: boolean
+          kind?: Database["public"]["Enums"]["person_kind"]
           notes?: string | null
           owner_user_id?: string | null
+          species?: string | null
           updated_at?: string
         }
         Update: {
+          avatar_emoji?: string | null
           birth_date?: string | null
           comune_residenza?: string | null
           created_at?: string
@@ -269,8 +276,10 @@ export type Database = {
           family_id?: string | null
           id?: string
           is_minor?: boolean
+          kind?: Database["public"]["Enums"]["person_kind"]
           notes?: string | null
           owner_user_id?: string | null
+          species?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -612,6 +621,7 @@ export type Database = {
         | "debit_card"
         | "bank_account"
         | "other"
+      person_kind: "human" | "pet"
       subscription_category:
         | "streaming"
         | "musica"

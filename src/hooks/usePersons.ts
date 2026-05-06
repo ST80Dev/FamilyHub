@@ -1,24 +1,26 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from './useAuth'
 import { useFamily } from './useFamily'
-import type { FamilyMember } from '../types'
+import type { Person } from '../types'
 
-export interface UseFamilyMembersResult {
-  members: FamilyMember[]
+export interface UsePersonsResult {
+  persons: Person[]
   loading: boolean
   error: string | null
   refresh: () => void
 }
 
-export function useFamilyMembers(): UseFamilyMembersResult {
+export function usePersons(): UsePersonsResult {
+  const { user } = useAuth()
   const { family } = useFamily()
-  const [data, setData] = useState<FamilyMember[]>([])
+  const [data, setData] = useState<Person[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [tick, setTick] = useState(0)
 
   useEffect(() => {
-    if (!family) {
+    if (!user) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setData([])
       return
@@ -29,11 +31,15 @@ export function useFamilyMembers(): UseFamilyMembersResult {
     setError(null)
 
     ;(async () => {
+      const filter = family
+        ? `family_id.eq.${family.id},owner_user_id.eq.${user.id}`
+        : `owner_user_id.eq.${user.id}`
       const { data, error: e } = await supabase
-        .from('family_members')
+        .from('persons')
         .select('*')
-        .eq('family_id', family.id)
-        .order('joined_at', { ascending: true })
+        .or(filter)
+        .order('kind', { ascending: true })
+        .order('display_name', { ascending: true })
 
       if (cancelled) return
       if (e) setError(e.message)
@@ -44,9 +50,14 @@ export function useFamilyMembers(): UseFamilyMembersResult {
     return () => {
       cancelled = true
     }
-  }, [family, tick])
+  }, [user, family, tick])
 
   const refresh = useCallback(() => setTick((t) => t + 1), [])
 
-  return { members: data, loading, error, refresh }
+  return {
+    persons: user ? data : [],
+    loading: user ? loading : false,
+    error: user ? error : null,
+    refresh,
+  }
 }
