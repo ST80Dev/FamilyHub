@@ -7,30 +7,32 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant
   size?: Size
   loading?: boolean
+  fullWidth?: boolean
   children: ReactNode
 }
 
 const variants: Record<Variant, string> = {
   primary:
-    'bg-sky-600 text-white hover:bg-sky-700 disabled:bg-sky-300 dark:disabled:bg-sky-800',
+    'candy-peach-grad text-white clay hover:brightness-105 active:translate-y-px disabled:opacity-50',
   secondary:
-    'bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700',
+    'clay text-ink hover:brightness-[1.02] active:translate-y-px disabled:opacity-50',
   ghost:
-    'bg-transparent text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800',
+    'bg-transparent text-ink-soft hover:text-ink hover:bg-[color:var(--surface-2)]',
   danger:
-    'bg-red-600 text-white hover:bg-red-700 disabled:bg-red-300',
+    'candy-red-grad text-white clay hover:brightness-105 active:translate-y-px disabled:opacity-50',
 }
 
 const sizes: Record<Size, string> = {
-  sm: 'h-8 px-3 text-sm',
-  md: 'h-10 px-4 text-sm',
-  lg: 'h-12 px-6 text-base',
+  sm: 'h-9 px-4 text-sm rounded-2xl',
+  md: 'h-11 px-5 text-sm rounded-2xl',
+  lg: 'h-13 px-6 text-base rounded-[20px] py-3.5',
 }
 
 export function Button({
   variant = 'primary',
   size = 'md',
   loading = false,
+  fullWidth = false,
   disabled,
   className = '',
   children,
@@ -40,7 +42,7 @@ export function Button({
     <button
       {...rest}
       disabled={disabled || loading}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 disabled:cursor-not-allowed dark:focus:ring-offset-slate-950 ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 font-semibold transition-[filter,transform,background] disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${fullWidth ? 'w-full' : ''} ${className}`}
     >
       {loading && (
         <span

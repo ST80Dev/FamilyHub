@@ -1,16 +1,16 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useFamily } from '../hooks/useFamily'
 import { supabase } from '../lib/supabase'
-import { Button } from '../components/ui/Button'
-import { Field, Input } from '../components/ui/Field'
+import { AppShell } from '../components/layout/AppShell'
+import { Button, Card, Field, Input } from '../components/ui'
 
 type Mode = 'create' | 'join'
 
 export default function Family() {
-  const { user, loading: authLoading, signOut } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { family, membership, loading: famLoading, refresh } = useFamily()
   const [mode, setMode] = useState<Mode>('create')
   const [familyName, setFamilyName] = useState('')
@@ -69,93 +69,76 @@ export default function Family() {
 
   if (family) {
     return (
-      <main className="mx-auto max-w-3xl p-6">
-        <header className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Famiglia</h1>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              Gestione del nucleo familiare e inviti.
-            </p>
-          </div>
-          <Link
-            to="/"
-            className="text-sm text-sky-600 hover:underline dark:text-sky-400"
-          >
-            ← Dashboard
-          </Link>
-        </header>
+      <AppShell>
+        <div className="md:mt-4">
+          <h1 className="font-display text-3xl font-bold tracking-tight text-ink">
+            Famiglia
+          </h1>
+          <p className="mt-1 text-sm text-ink-soft">
+            Gestione del nucleo e inviti.
+          </p>
+        </div>
 
-        <section className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-          <div className="flex items-center justify-between">
+        <Card variant="surface" padding="lg" radius="xl" className="mt-6">
+          <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              <h2 className="font-display text-xl font-bold text-ink">
                 {family.name}
               </h2>
               {membership?.role === 'owner' && (
-                <span className="mt-1 inline-block rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700 dark:bg-sky-900 dark:text-sky-200">
-                  owner
+                <span className="mt-2 inline-block rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider candy-lemon-grad text-[color:var(--candy-ink)]">
+                  Owner
                 </span>
               )}
             </div>
           </div>
-        </section>
+        </Card>
 
-        <section className="mt-6 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-          <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300">
+        <Card variant="surface" padding="lg" radius="xl" className="mt-4">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-ink-soft">
             Codice d'invito
           </h2>
           <div className="mt-2 flex items-center gap-3">
-            <p className="font-mono text-2xl tracking-[0.3em]">
+            <p className="font-display text-3xl font-bold tracking-[0.3em] text-ink">
               {family.invite_code}
             </p>
-            <Button variant="ghost" size="sm" onClick={copyInvite}>
+            <Button variant="secondary" size="sm" onClick={copyInvite}>
               {copied ? 'Copiato' : 'Copia'}
             </Button>
           </div>
-          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+          <p className="mt-3 text-sm text-ink-soft">
             Condividi questo codice con gli altri membri della famiglia per farli
             accedere agli stessi dati.
           </p>
-        </section>
-
-        <div className="mt-8 text-center text-xs text-slate-500 dark:text-slate-400">
-          Connesso come <span className="font-medium">{user.email}</span>.{' '}
-          <button
-            onClick={signOut}
-            className="underline hover:text-slate-700 dark:hover:text-slate-300"
-          >
-            Esci
-          </button>
-        </div>
-      </main>
+        </Card>
+      </AppShell>
     )
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md items-center justify-center px-4 py-8">
-      <div className="w-full">
-        <div className="mb-6 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Configura il tuo nucleo
-          </h1>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            Crea una famiglia per condividere scadenze e abbonamenti, oppure
-            unisciti a una esistente con il codice d'invito. Puoi farlo anche
-            più tardi.
-          </p>
-        </div>
+    <AppShell>
+      <div className="md:mt-4">
+        <h1 className="font-display text-3xl font-bold tracking-tight text-ink">
+          Configura il nucleo
+        </h1>
+        <p className="mt-1 text-sm text-ink-soft">
+          Crea una famiglia per condividere scadenze e abbonamenti, oppure
+          unisciti a una esistente con il codice d'invito.
+        </p>
+      </div>
 
-        <div className="mb-4 grid grid-cols-2 rounded-lg border border-slate-200 p-1 text-sm dark:border-slate-800">
+      <Card variant="surface" padding="lg" radius="xl" className="mt-6">
+        <div className="mb-5 grid grid-cols-2 gap-1 rounded-2xl p-1 clay-inset">
           <button
             type="button"
             onClick={() => {
               setMode('create')
               setError(null)
             }}
-            className={`rounded-md py-2 font-medium transition-colors ${
+            className={`rounded-xl py-2 text-sm font-semibold transition-colors ${
               mode === 'create'
-                ? 'bg-sky-600 text-white'
-                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
+                ? 'candy-peach-grad text-white clay-sm'
+                : 'text-ink-soft hover:text-ink'
             }`}
           >
             Crea famiglia
@@ -166,10 +149,10 @@ export default function Family() {
               setMode('join')
               setError(null)
             }}
-            className={`rounded-md py-2 font-medium transition-colors ${
+            className={`rounded-xl py-2 text-sm font-semibold transition-colors ${
               mode === 'join'
-                ? 'bg-sky-600 text-white'
-                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
+                ? 'candy-peach-grad text-white clay-sm'
+                : 'text-ink-soft hover:text-ink'
             }`}
           >
             Unisciti
@@ -187,14 +170,14 @@ export default function Family() {
               />
             </Field>
             {error && (
-              <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+              <div className="rounded-2xl bg-[color:var(--candy-peach)]/30 px-3 py-2 text-sm text-[color:var(--candy-ink)]">
                 {error}
               </div>
             )}
             <Button
               type="submit"
               size="lg"
-              className="w-full"
+              fullWidth
               loading={submitting}
               disabled={!familyName.trim()}
             >
@@ -224,14 +207,14 @@ export default function Family() {
               />
             </Field>
             {error && (
-              <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+              <div className="rounded-2xl bg-[color:var(--candy-peach)]/30 px-3 py-2 text-sm text-[color:var(--candy-ink)]">
                 {error}
               </div>
             )}
             <Button
               type="submit"
               size="lg"
-              className="w-full"
+              fullWidth
               loading={submitting}
               disabled={inviteCode.trim().length !== 8}
             >
@@ -239,26 +222,7 @@ export default function Family() {
             </Button>
           </form>
         )}
-
-        <div className="mt-6 text-center">
-          <Link
-            to="/"
-            className="text-sm text-slate-500 hover:text-slate-700 hover:underline dark:text-slate-400 dark:hover:text-slate-200"
-          >
-            Salta per ora
-          </Link>
-        </div>
-
-        <div className="mt-8 text-center text-xs text-slate-500 dark:text-slate-400">
-          Connesso come <span className="font-medium">{user.email}</span>.{' '}
-          <button
-            onClick={signOut}
-            className="underline hover:text-slate-700 dark:hover:text-slate-300"
-          >
-            Esci
-          </button>
-        </div>
-      </div>
-    </main>
+      </Card>
+    </AppShell>
   )
 }

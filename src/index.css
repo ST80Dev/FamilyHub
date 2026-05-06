@@ -1,19 +1,199 @@
 @import "tailwindcss";
 
-@theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --color-brand-50:  #f0f9ff;
-  --color-brand-100: #e0f2fe;
-  --color-brand-500: #0ea5e9;
-  --color-brand-600: #0284c7;
-  --color-brand-700: #0369a1;
+/* Font caricati via <link> in index.html: Plus Jakarta Sans + Fraunces */
+
+/* ===========================================================
+   Design system "Caramelle / Claymorphism"
+   - Palette accenti caramella: fissa, indipendente dal tema.
+   - 6 temi superficie: pesca (default), rosa, blu, verde, giallo, scuro.
+     Cambiano solo bg/surface/ink + tinta delle ombre.
+   - Ombre claymorphism toned down: drop shadow morbida + halo bianco lieve.
+   =========================================================== */
+
+:root {
+  /* Accenti caramella (fissi su tutti i temi) */
+  --candy-peach:  #FFB39E;
+  --candy-peach-2:#FF9C82;
+  --candy-mint:   #A6E3C7;
+  --candy-mint-2: #7FD3AE;
+  --candy-sky:    #A8D5F2;
+  --candy-sky-2:  #80BFE3;
+  --candy-lemon:  #FFE89E;
+  --candy-lemon-2:#FFD16B;
+  --candy-lilac:  #D7C4F2;
+  --candy-lilac-2:#B8A0E0;
+  --candy-pink:   #FFC1D6;
+  --candy-pink-2: #F2A6C0;
+  --candy-red-2:  #FF8E76;
+  --candy-ink:    #3B2C2A;
+
+  /* Tema "pesca" (default) */
+  --bg:        #FFF1E6;
+  --bg-2:      #FFE3D6;
+  --surface:   #FFFFFF;
+  --surface-2: #FFF8F2;
+  --ink:       #3B2C2A;
+  --ink-soft:  #6E5A57;
+  --line:      rgba(180,120,90,0.15);
+
+  --shadow-out:
+    6px 6px 14px rgba(180,120,90,0.18),
+    -1px -1px 3px rgba(255,255,255,0.35);
+  --shadow-out-sm:
+    3px 3px 8px rgba(180,120,90,0.16),
+    -1px -1px 2px rgba(255,255,255,0.3);
+  --shadow-in:
+    inset 2px 2px 6px rgba(180,120,90,0.14),
+    inset -1px -1px 3px rgba(255,255,255,0.4);
+}
+
+[data-theme="rosa"] {
+  --bg:#FFE4EC; --bg-2:#FBC8DA;
+  --surface:#FFFFFF; --surface-2:#FFF4F8;
+  --ink:#4A2A35; --ink-soft:#8A5A6E;
+  --line:rgba(180,90,120,0.15);
+  --shadow-out: 6px 6px 14px rgba(180,90,120,0.18), -1px -1px 3px rgba(255,255,255,0.35);
+  --shadow-out-sm: 3px 3px 8px rgba(180,90,120,0.16), -1px -1px 2px rgba(255,255,255,0.3);
+  --shadow-in: inset 2px 2px 6px rgba(180,90,120,0.14), inset -1px -1px 3px rgba(255,255,255,0.4);
+}
+
+[data-theme="blu"] {
+  --bg:#E3EEFB; --bg-2:#C7DCF4;
+  --surface:#FFFFFF; --surface-2:#F4F8FE;
+  --ink:#1F3046; --ink-soft:#5C6E85;
+  --line:rgba(70,110,160,0.15);
+  --shadow-out: 6px 6px 14px rgba(70,110,160,0.18), -1px -1px 3px rgba(255,255,255,0.4);
+  --shadow-out-sm: 3px 3px 8px rgba(70,110,160,0.16), -1px -1px 2px rgba(255,255,255,0.3);
+  --shadow-in: inset 2px 2px 6px rgba(70,110,160,0.14), inset -1px -1px 3px rgba(255,255,255,0.45);
+}
+
+[data-theme="verde"] {
+  --bg:#E4F4E8; --bg-2:#C7E8D1;
+  --surface:#FFFFFF; --surface-2:#F4FBF6;
+  --ink:#244033; --ink-soft:#5C7B68;
+  --line:rgba(80,140,100,0.15);
+  --shadow-out: 6px 6px 14px rgba(80,140,100,0.18), -1px -1px 3px rgba(255,255,255,0.4);
+  --shadow-out-sm: 3px 3px 8px rgba(80,140,100,0.16), -1px -1px 2px rgba(255,255,255,0.3);
+  --shadow-in: inset 2px 2px 6px rgba(80,140,100,0.14), inset -1px -1px 3px rgba(255,255,255,0.45);
+}
+
+[data-theme="giallo"] {
+  --bg:#FFF6D6; --bg-2:#FFE9A8;
+  --surface:#FFFFFF; --surface-2:#FFFCEE;
+  --ink:#4A3A14; --ink-soft:#86713B;
+  --line:rgba(180,140,40,0.18);
+  --shadow-out: 6px 6px 14px rgba(180,140,40,0.18), -1px -1px 3px rgba(255,255,255,0.35);
+  --shadow-out-sm: 3px 3px 8px rgba(180,140,40,0.16), -1px -1px 2px rgba(255,255,255,0.3);
+  --shadow-in: inset 2px 2px 6px rgba(180,140,40,0.14), inset -1px -1px 3px rgba(255,255,255,0.4);
+}
+
+[data-theme="scuro"] {
+  --bg:#1F1B1A; --bg-2:#2A2422;
+  --surface:#2E2826; --surface-2:#352F2C;
+  --ink:#F4E9D8; --ink-soft:#B5A89B;
+  --line:rgba(255,255,255,0.08);
+  --shadow-out: 6px 6px 16px rgba(0,0,0,0.45), -1px -1px 3px rgba(255,255,255,0.03);
+  --shadow-out-sm: 3px 3px 10px rgba(0,0,0,0.4), -1px -1px 2px rgba(255,255,255,0.03);
+  --shadow-in: inset 2px 2px 6px rgba(0,0,0,0.4), inset -1px -1px 3px rgba(255,255,255,0.04);
+}
+
+/* Mappa i token CSS come classi Tailwind v4 */
+@theme inline {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, "Times New Roman", serif;
+
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-line: var(--line);
+
+  --color-candy-peach: var(--candy-peach);
+  --color-candy-mint: var(--candy-mint);
+  --color-candy-sky: var(--candy-sky);
+  --color-candy-lemon: var(--candy-lemon);
+  --color-candy-lilac: var(--candy-lilac);
+  --color-candy-pink: var(--candy-pink);
+  --color-candy-ink: var(--candy-ink);
 }
 
 html, body, #root {
   height: 100%;
 }
 
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
 body {
-  @apply bg-white text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+  color: var(--ink);
   font-family: var(--font-sans);
+  background: linear-gradient(160deg, var(--bg) 0%, var(--bg-2) 100%);
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  transition: background .35s ease, color .35s ease;
+}
+
+/* ===== Utility claymorphism ===== */
+@utility clay {
+  background: var(--surface);
+  box-shadow: var(--shadow-out);
+}
+@utility clay-sm {
+  background: var(--surface);
+  box-shadow: var(--shadow-out-sm);
+}
+@utility clay-inset {
+  box-shadow: var(--shadow-in);
+}
+@utility clay-flat {
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+/* ===== Gradients candy (icon tile, hero, urgency) ===== */
+@utility candy-peach-grad {
+  background: linear-gradient(150deg, var(--candy-peach), var(--candy-peach-2));
+}
+@utility candy-mint-grad {
+  background: linear-gradient(150deg, var(--candy-mint), var(--candy-mint-2));
+}
+@utility candy-sky-grad {
+  background: linear-gradient(150deg, var(--candy-sky), var(--candy-sky-2));
+}
+@utility candy-lemon-grad {
+  background: linear-gradient(150deg, var(--candy-lemon), var(--candy-lemon-2));
+}
+@utility candy-lilac-grad {
+  background: linear-gradient(150deg, var(--candy-lilac), var(--candy-lilac-2));
+}
+@utility candy-pink-grad {
+  background: linear-gradient(150deg, var(--candy-pink), var(--candy-pink-2));
+}
+@utility candy-red-grad {
+  background: linear-gradient(150deg, var(--candy-peach), var(--candy-red-2));
+}
+@utility hero-grad {
+  background: linear-gradient(150deg, var(--candy-lilac), var(--candy-sky));
+}
+
+/* ===== Tipografia ===== */
+@utility font-display {
+  font-family: var(--font-display);
+}
+
+/* Focus ring coerente con il tema */
+*:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Scrollbar discreta */
+@media (pointer: fine) {
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 999px; }
 }
