@@ -78,8 +78,8 @@ Tutte le tabelle hanno RLS abilitato. Pattern:
 
 - Helper `public.is_family_member(family_id)` e `public.is_family_owner(family_id)`,
   entrambi `SECURITY DEFINER` per evitare ricorsione RLS
-- Le tabelle figlie usano: `using (is_family_member(family_id))` su tutte
-  le operazioni
+- Le tabelle figlie supportano scope alternativi (`family_id` XOR `owner_user_id`):
+  `using ((family_id is not null and is_family_member(family_id)) or owner_user_id = auth.uid())`
 - `families`: select per membri, insert per autenticati, update/delete solo
   owner. Il trigger `add_creator_as_owner` aggiunge l'utente che inserisce
   come `owner` in `family_members`
@@ -87,6 +87,30 @@ Tutte le tabelle hanno RLS abilitato. Pattern:
   consentito sull'utente stesso oppure dall'owner
 - RPC `join_family_by_code(code, name)` per joinare una famiglia tramite
   codice invito
+- RPC `promote_personal_to_family(target_family, categories?)` per spostare
+  i record personali dell'utente corrente in una famiglia (usato dopo create/join)
+
+### Modello di proprietà dei record
+
+Ogni record nelle tabelle dati (persons, vehicles, pets, deadlines, subscriptions,
+warranties, vouchers, home_maintenance) appartiene **o** a una famiglia
+(`family_id`) **o** a un singolo utente (`owner_user_id`), in mutua esclusione
+forzata da CHECK constraint. Implicazioni:
+
+- L'utente può usare l'app da solo: tutti i record che crea sono personali
+  (`owner_user_id = auth.uid()`).
+- Al create/join di una famiglia, la pagina `/famiglia` propone la promotion
+  one-shot dei record personali nel nucleo via `promote_personal_to_family`.
+- Trigger cross-scope (`*_check_scope`) impediscono che un record figlio
+  riferisca un parent di scope diverso (es. una scadenza personale che punta
+  a un veicolo familiare).
+- L'helper TypeScript `lib/ownership.ts:recordOwnership(family, userId)`
+  produce le colonne corrette da passare in insert.
+
+**Fase 2 (futura)**: condivisione selettiva per categoria quando un utente
+appartiene a più famiglie. Tabella aggiuntiva `personal_sharing(user_id,
+family_id, category)` + estensione RLS sopra il modello attuale, senza
+toccare le colonne esistenti.
 
 ### Migrazioni
 
@@ -96,6 +120,11 @@ In `supabase/migrations/`:
 - `20260505140100_init_entities.sql` — persons, vehicles, pets + RLS
 - `20260505140200_init_records.sql` — deadlines, subscriptions, warranties,
   vouchers, home_maintenance + RLS
+- `20260506100000_optional_family_ownership.sql` — `family_id` reso nullable
+  su tutte e 8 le tabelle dati, aggiunta colonna `owner_user_id` con CHECK XOR,
+  RLS riscritta per supportare record personali, trigger cross-scope sulle FK
+  parent (persons/vehicles/pets), RPC `promote_personal_to_family` per spostare
+  i record personali di un utente in una famiglia
 
 Applicate al progetto remoto via Supabase MCP. Per rigenerare i tipi TS:
 
@@ -168,10 +197,16 @@ corrente.
 - Mobile-first, bottom nav su mobile, sidebar su desktop
 - Tema chiaro di default, dark mode supportata via `dark:` Tailwind
 - Onboarding non bloccante: l'utente può usare l'app anche senza creare/unirsi
-  a una famiglia. La gestione del nucleo (creazione, invito, join via codice)
-  vive nella pagina `/famiglia` ed è raggiungibile in qualsiasi momento. La
-  Dashboard mostra una CTA "Configura nucleo" finché non c'è una famiglia
-  associata all'utente.
+  a una famiglia. Le pagine Scadenze/Abbonamenti/Dashboard restano pienamente
+  funzionali in modalità solo-utente (i record creati sono `owner_user_id`).
+  La gestione del nucleo (creazione, invito, join via codice) vive nella
+  pagina `/famiglia` ed è raggiungibile in qualsiasi momento. La Dashboard e
+  le pagine categoria mostrano un banner morbido "Stai usando FamilyHub da
+  solo" con link a `/famiglia`, non bloccante.
+- Al create/join di una famiglia, se l'utente ha record personali pendenti,
+  la pagina `/famiglia` mostra un prompt one-shot "Condividere i record
+  personali col nucleo?" con conteggio per categoria; al sì viene chiamata
+  la RPC `promote_personal_to_family`.
 
 ## Convenzioni di sviluppo
 
@@ -190,6 +225,8 @@ corrente.
 
 ## Workflow git e branching
 
+- **Branch di default del repo**: `main` (impostato lato GitHub). Tutto il
+  lavoro va aperto come PR contro `main`.
 - **All'inizio di ogni nuova attività**, prima di toccare il codice:
   `git fetch origin --prune && git log origin/main --oneline -10` per vedere
   lo stato reale di `main` sul remoto.
@@ -199,9 +236,9 @@ corrente.
 - **Creare nuovi branch sempre da `origin/main` aggiornato**, mai da un
   branch ereditato dalla sessione precedente. Pattern:
   `git checkout -B <nuovo-branch> origin/main`.
-- **Quando si apre una PR**: il target deve essere `main`. Verificare
-  esplicitamente nel form PR e nella descrizione che la base sia `main` e
-  non un altro branch di lavoro.
+- **Quando si apre una PR**: il target deve essere `main` (default branch).
+  Verificare esplicitamente nel form PR e nella descrizione che la base sia
+  `main` e non un altro branch di lavoro.
 - **Dopo il merge**: il deploy di produzione su Vercel parte da `main`. Se
   una PR viene mergiata su un branch diverso, la produzione non si aggiorna
   e Claude/sviluppatore devono accorgersene controllando `origin/main`.

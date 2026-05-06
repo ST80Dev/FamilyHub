@@ -122,19 +122,14 @@ export default function Dashboard() {
       </section>
 
       {!family && !famLoading && (
-        <Card variant="surface" padding="lg" className="mt-5">
-          <h3 className="font-display text-lg font-bold text-ink">
-            Stai usando FamilyHub da solo
-          </h3>
-          <p className="mt-1 text-sm text-ink-soft">
-            Crea una famiglia o unisciti a una esistente per condividere scadenze
-            e abbonamenti col resto del nucleo.
+        <Card variant="surface" padding="md" className="mt-5">
+          <p className="text-sm text-ink-soft">
+            Stai usando FamilyHub da solo. Quando vuoi puoi{' '}
+            <Link to="/famiglia" className="font-semibold text-ink underline">
+              creare o unirti a una famiglia
+            </Link>{' '}
+            e condividere scadenze e abbonamenti.
           </p>
-          <div className="mt-3">
-            <Link to="/famiglia">
-              <Button size="sm">Configura nucleo</Button>
-            </Link>
-          </div>
         </Card>
       )}
 
@@ -213,7 +208,7 @@ export default function Dashboard() {
           {dlLoading && (
             <div className="text-center text-sm text-ink-soft">Caricamento…</div>
           )}
-          {!dlLoading && upcoming.length === 0 && family && (
+          {!dlLoading && upcoming.length === 0 && (
             <Card variant="surface" padding="lg" className="text-center">
               <p className="text-sm text-ink-soft">
                 Tutto in ordine, nessuna scadenza nei prossimi 60 giorni.
@@ -272,7 +267,7 @@ export default function Dashboard() {
         </section>
       )}
 
-      {family && subscriptions.length === 0 && !subLoading && (
+      {subscriptions.length === 0 && !subLoading && (
         <section className="mt-7">
           <Card variant="surface" padding="lg" className="text-center">
             <div className="text-3xl" aria-hidden>💳</div>

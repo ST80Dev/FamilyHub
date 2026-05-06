@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
@@ -8,6 +8,64 @@ import { AppShell } from '../components/layout/AppShell'
 import { Button, Card, Field, Input } from '../components/ui'
 
 type Mode = 'create' | 'join'
+
+interface PersonalCounts {
+  deadlines: number
+  subscriptions: number
+  warranties: number
+  vouchers: number
+  home_maintenance: number
+  persons: number
+  vehicles: number
+  pets: number
+}
+
+const COUNT_LABELS: Record<keyof PersonalCounts, [string, string]> = {
+  deadlines: ['scadenza', 'scadenze'],
+  subscriptions: ['abbonamento', 'abbonamenti'],
+  warranties: ['garanzia', 'garanzie'],
+  vouchers: ['buono', 'buoni'],
+  home_maintenance: ['manutenzione', 'manutenzioni'],
+  persons: ['persona', 'persone'],
+  vehicles: ['veicolo', 'veicoli'],
+  pets: ['animale', 'animali'],
+}
+
+async function countPersonal(userId: string): Promise<PersonalCounts> {
+  const tables: (keyof PersonalCounts)[] = [
+    'deadlines', 'subscriptions', 'warranties', 'vouchers',
+    'home_maintenance', 'persons', 'vehicles', 'pets',
+  ]
+  const counts: PersonalCounts = {
+    deadlines: 0, subscriptions: 0, warranties: 0, vouchers: 0,
+    home_maintenance: 0, persons: 0, vehicles: 0, pets: 0,
+  }
+  await Promise.all(
+    tables.map(async (t) => {
+      const { count } = await supabase
+        .from(t)
+        .select('*', { count: 'exact', head: true })
+        .eq('owner_user_id', userId)
+      counts[t] = count ?? 0
+    }),
+  )
+  return counts
+}
+
+function totalCount(c: PersonalCounts): number {
+  return Object.values(c).reduce((a, b) => a + b, 0)
+}
+
+function formatPersonalSummary(c: PersonalCounts): string {
+  const parts: string[] = []
+  for (const k of Object.keys(c) as (keyof PersonalCounts)[]) {
+    const n = c[k]
+    if (n === 0) continue
+    const [singular, plural] = COUNT_LABELS[k]
+    parts.push(`${n} ${n === 1 ? singular : plural}`)
+  }
+  return parts.join(', ')
+}
 
 export default function Family() {
   const { user, loading: authLoading } = useAuth()
@@ -19,6 +77,31 @@ export default function Family() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+
+  const [pendingPromotion, setPendingPromotion] = useState<{
+    familyId: string
+    counts: PersonalCounts
+  } | null>(null)
+  const [promoting, setPromoting] = useState(false)
+  const [promoted, setPromoted] = useState<string | null>(null)
+
+  // After joining/creating, see if user still has personal records to promote.
+  useEffect(() => {
+    if (!user || !family) return
+    if (pendingPromotion?.familyId === family.id) return
+    if (promoted === family.id) return
+    let cancelled = false
+    ;(async () => {
+      const counts = await countPersonal(user.id)
+      if (cancelled) return
+      if (totalCount(counts) > 0) {
+        setPendingPromotion({ familyId: family.id, counts })
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [user, family, pendingPromotion, promoted])
 
   if (authLoading || famLoading) return null
   if (!user) return <Navigate to="/signin" replace />
@@ -67,6 +150,31 @@ export default function Family() {
     setTimeout(() => setCopied(false), 1500)
   }
 
+  async function handlePromote() {
+    if (!pendingPromotion) return
+    setPromoting(true)
+    setError(null)
+    try {
+      const { error: rpcErr } = await supabase.rpc(
+        'promote_personal_to_family',
+        { target_family: pendingPromotion.familyId },
+      )
+      if (rpcErr) throw rpcErr
+      setPromoted(pendingPromotion.familyId)
+      setPendingPromotion(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore condivisione')
+    } finally {
+      setPromoting(false)
+    }
+  }
+
+  function dismissPromotion() {
+    if (!pendingPromotion) return
+    setPromoted(pendingPromotion.familyId)
+    setPendingPromotion(null)
+  }
+
   if (family) {
     return (
       <AppShell>
@@ -78,6 +186,37 @@ export default function Family() {
             Gestione del nucleo e inviti.
           </p>
         </div>
+
+        {pendingPromotion && (
+          <Card variant="surface" padding="lg" radius="xl" className="mt-6">
+            <h2 className="font-display text-lg font-bold text-ink">
+              Condividere i record personali col nucleo?
+            </h2>
+            <p className="mt-2 text-sm text-ink-soft">
+              Hai {formatPersonalSummary(pendingPromotion.counts)} che ora sono
+              solo tuoi. Vuoi spostarli in <strong>{family.name}</strong> così
+              che li veda tutto il nucleo?
+            </p>
+            {error && (
+              <div className="mt-3 rounded-2xl bg-[color:var(--candy-peach)]/30 px-3 py-2 text-sm text-[color:var(--candy-ink)]">
+                {error}
+              </div>
+            )}
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button size="sm" loading={promoting} onClick={handlePromote}>
+                Sì, condividi tutto
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={promoting}
+                onClick={dismissPromotion}
+              >
+                No, tienili miei
+              </Button>
+            </div>
+          </Card>
+        )}
 
         <Card variant="surface" padding="lg" radius="xl" className="mt-6">
           <div className="flex items-center justify-between gap-3">

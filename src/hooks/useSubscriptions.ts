@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from './useAuth'
 import { useFamily } from './useFamily'
 import type { Subscription } from '../types'
 
@@ -11,6 +12,7 @@ export interface UseSubscriptionsResult {
 }
 
 export function useSubscriptions(): UseSubscriptionsResult {
+  const { user } = useAuth()
   const { family } = useFamily()
   const [data, setData] = useState<Subscription[]>([])
   const [loading, setLoading] = useState(false)
@@ -18,18 +20,24 @@ export function useSubscriptions(): UseSubscriptionsResult {
   const [tick, setTick] = useState(0)
 
   useEffect(() => {
-    if (!family) return
+    if (!user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setData([])
+      return
+    }
 
     let cancelled = false
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
     setError(null)
 
     ;(async () => {
+      const filter = family
+        ? `family_id.eq.${family.id},owner_user_id.eq.${user.id}`
+        : `owner_user_id.eq.${user.id}`
       const { data, error: e } = await supabase
         .from('subscriptions')
         .select('*')
-        .eq('family_id', family.id)
+        .or(filter)
         .order('next_billing_date', { ascending: true, nullsFirst: false })
 
       if (cancelled) return
@@ -41,14 +49,14 @@ export function useSubscriptions(): UseSubscriptionsResult {
     return () => {
       cancelled = true
     }
-  }, [family, tick])
+  }, [user, family, tick])
 
   const refresh = useCallback(() => setTick((t) => t + 1), [])
 
   return {
-    subscriptions: family ? data : [],
-    loading: family ? loading : false,
-    error: family ? error : null,
+    subscriptions: user ? data : [],
+    loading: user ? loading : false,
+    error: user ? error : null,
     refresh,
   }
 }

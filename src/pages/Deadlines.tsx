@@ -2,11 +2,13 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AppShell } from '../components/layout/AppShell'
 import { Button, Card } from '../components/ui'
+import { useAuth } from '../hooks/useAuth'
 import { useFamily } from '../hooks/useFamily'
 import { useDeadlines } from '../hooks/useDeadlines'
 import { DeadlineCard } from '../components/deadlines/DeadlineCard'
 import { DeadlineForm } from '../components/deadlines/DeadlineForm'
 import { urgencyBucket } from '../lib/deadlineEngine'
+import { recordOwnership } from '../lib/ownership'
 import type { Deadline } from '../types'
 
 type Group = 'overdue' | 'within7' | 'within30' | 'within60' | 'later'
@@ -22,6 +24,7 @@ const GROUP_LABEL: Record<Group, string> = {
 const GROUP_ORDER: Group[] = ['overdue', 'within7', 'within30', 'within60', 'later']
 
 export default function Deadlines() {
+  const { user } = useAuth()
   const { family, loading: famLoading } = useFamily()
   const { deadlines, loading, refresh } = useDeadlines()
   const [editing, setEditing] = useState<Deadline | null>(null)
@@ -43,7 +46,9 @@ export default function Deadlines() {
     return out
   }, [deadlines])
 
-  if (famLoading) return null
+  if (famLoading || !user) return null
+
+  const scope = recordOwnership(family, user.id)
 
   return (
     <AppShell>
@@ -58,33 +63,28 @@ export default function Deadlines() {
               : `${deadlines.length} ${deadlines.length === 1 ? 'scadenza' : 'scadenze'}`}
           </p>
         </div>
-        <Button
-          size="sm"
-          onClick={() => setCreating(true)}
-          disabled={!family}
-        >
+        <Button size="sm" onClick={() => setCreating(true)}>
           + Nuova
         </Button>
       </div>
 
-      {!family && !famLoading && (
-        <Card variant="surface" padding="lg" className="mt-6 text-center">
+      {!family && (
+        <Card variant="surface" padding="md" className="mt-4">
           <p className="text-sm text-ink-soft">
-            Per tracciare scadenze condivise crea o unisciti a una famiglia.
+            Stai usando FamilyHub da solo. Le scadenze che aggiungi sono tue.{' '}
+            <Link to="/famiglia" className="font-semibold text-ink underline">
+              Crea o unisciti a una famiglia
+            </Link>{' '}
+            per condividerle col nucleo.
           </p>
-          <div className="mt-3">
-            <Link to="/famiglia">
-              <Button size="sm">Configura nucleo</Button>
-            </Link>
-          </div>
         </Card>
       )}
 
-      {family && loading && (
+      {loading && (
         <div className="mt-8 text-center text-sm text-ink-soft">Caricamento…</div>
       )}
 
-      {family && !loading && deadlines.length === 0 && (
+      {!loading && deadlines.length === 0 && (
         <Card variant="surface" padding="lg" className="mt-6 text-center">
           <div className="mb-3 text-4xl" aria-hidden>
             📅
@@ -103,7 +103,7 @@ export default function Deadlines() {
         </Card>
       )}
 
-      {family && !loading && deadlines.length > 0 && (
+      {!loading && deadlines.length > 0 && (
         <div className="mt-6 space-y-6">
           {GROUP_ORDER.map((g) => {
             const items = grouped[g]
@@ -131,18 +131,16 @@ export default function Deadlines() {
         </div>
       )}
 
-      {family && (
-        <DeadlineForm
-          open={creating || editing !== null}
-          onClose={() => {
-            setCreating(false)
-            setEditing(null)
-          }}
-          onSaved={refresh}
-          familyId={family.id}
-          initial={editing}
-        />
-      )}
+      <DeadlineForm
+        open={creating || editing !== null}
+        onClose={() => {
+          setCreating(false)
+          setEditing(null)
+        }}
+        onSaved={refresh}
+        scope={scope}
+        initial={editing}
+      />
     </AppShell>
   )
 }
