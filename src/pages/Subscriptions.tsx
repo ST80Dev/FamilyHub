@@ -2,12 +2,14 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AppShell } from '../components/layout/AppShell'
 import { Button, Card, Chip } from '../components/ui'
+import { useAuth } from '../hooks/useAuth'
 import { useFamily } from '../hooks/useFamily'
 import { useSubscriptions } from '../hooks/useSubscriptions'
 import { SubscriptionCard } from '../components/subscriptions/SubscriptionCard'
 import { SubscriptionForm } from '../components/subscriptions/SubscriptionForm'
 import { monthlyEquivalent } from '../lib/subscriptionMeta'
 import { formatCurrency } from '../lib/format'
+import { recordOwnership } from '../lib/ownership'
 import type { Subscription } from '../types'
 
 const MONTH_NAMES = [
@@ -16,6 +18,7 @@ const MONTH_NAMES = [
 ]
 
 export default function Subscriptions() {
+  const { user } = useAuth()
   const { family, loading: famLoading } = useFamily()
   const { subscriptions, loading, refresh } = useSubscriptions()
   const [editing, setEditing] = useState<Subscription | null>(null)
@@ -43,7 +46,9 @@ export default function Subscriptions() {
   const yearTotal = monthTotal * 12
   const monthLabel = MONTH_NAMES[new Date().getMonth()]
 
-  if (famLoading) return null
+  if (famLoading || !user) return null
+
+  const scope = recordOwnership(family, user.id)
 
   return (
     <AppShell>
@@ -58,63 +63,59 @@ export default function Subscriptions() {
               : `${active.length} ${active.length === 1 ? 'attivo' : 'attivi'}`}
           </p>
         </div>
-        <Button size="sm" onClick={() => setCreating(true)} disabled={!family}>
+        <Button size="sm" onClick={() => setCreating(true)}>
           + Nuovo
         </Button>
       </div>
 
-      {!family && !famLoading && (
-        <Card variant="surface" padding="lg" className="mt-6 text-center">
+      {!family && (
+        <Card variant="surface" padding="md" className="mt-4">
           <p className="text-sm text-ink-soft">
-            Per tracciare gli abbonamenti condivisi crea o unisciti a una
-            famiglia.
+            Stai usando FamilyHub da solo. Gli abbonamenti che aggiungi sono tuoi.{' '}
+            <Link to="/famiglia" className="font-semibold text-ink underline">
+              Crea o unisciti a una famiglia
+            </Link>{' '}
+            per condividerli col nucleo.
           </p>
-          <div className="mt-3">
-            <Link to="/famiglia">
-              <Button size="sm">Configura nucleo</Button>
-            </Link>
-          </div>
         </Card>
       )}
 
-      {family && (
-        <Card variant="hero" padding="lg" radius="xl" className="mt-5">
-          <div className="relative">
-            <div className="text-[11px] font-bold uppercase tracking-[0.08em] opacity-80">
-              Spesa mensile · {monthLabel}
-            </div>
-            <div className="font-display mt-1 text-[42px] font-bold leading-none">
-              {formatCurrency(monthTotal)}{' '}
-              <small className="text-sm font-medium opacity-70">/ mese</small>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Chip glass dotColor="var(--candy-peach-2)">
-                {active.length}{' '}
-                {active.length === 1 ? 'attivo' : 'attivi'}
-              </Chip>
-              <Chip glass>
-                proiezione anno: {formatCurrency(yearTotal)}
-              </Chip>
-            </div>
+      <Card variant="hero" padding="lg" radius="xl" className="mt-5">
+        <div className="relative">
+          <div className="text-[11px] font-bold uppercase tracking-[0.08em] opacity-80">
+            Spesa mensile · {monthLabel}
           </div>
-          <span
-            aria-hidden
-            className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/35"
-          />
-          <span
-            aria-hidden
-            className="pointer-events-none absolute -bottom-8 -left-5 h-24 w-24 rounded-full bg-white/25"
-          />
-        </Card>
-      )}
+          <div className="font-display mt-1 text-[42px] font-bold leading-none">
+            {formatCurrency(monthTotal)}{' '}
+            <small className="text-sm font-medium opacity-70">/ mese</small>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Chip glass dotColor="var(--candy-peach-2)">
+              {active.length}{' '}
+              {active.length === 1 ? 'attivo' : 'attivi'}
+            </Chip>
+            <Chip glass>
+              proiezione anno: {formatCurrency(yearTotal)}
+            </Chip>
+          </div>
+        </div>
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/35"
+        />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -bottom-8 -left-5 h-24 w-24 rounded-full bg-white/25"
+        />
+      </Card>
 
-      {family && loading && (
+      {loading && (
         <div className="mt-8 text-center text-sm text-ink-soft">
           Caricamento…
         </div>
       )}
 
-      {family && !loading && subscriptions.length === 0 && (
+      {!loading && subscriptions.length === 0 && (
         <Card variant="surface" padding="lg" className="mt-6 text-center">
           <div className="mb-3 text-4xl" aria-hidden>💳</div>
           <h2 className="font-display text-xl font-bold text-ink">
@@ -132,7 +133,7 @@ export default function Subscriptions() {
         </Card>
       )}
 
-      {family && !loading && active.length > 0 && (
+      {!loading && active.length > 0 && (
         <section className="mt-6">
           <h2 className="font-display mb-2 px-1 text-lg font-bold text-ink">
             Attivi{' '}
@@ -152,7 +153,7 @@ export default function Subscriptions() {
         </section>
       )}
 
-      {family && paused.length > 0 && (
+      {paused.length > 0 && (
         <section className="mt-6">
           <h2 className="font-display mb-2 px-1 text-lg font-bold text-ink">
             In pausa{' '}
@@ -172,7 +173,7 @@ export default function Subscriptions() {
         </section>
       )}
 
-      {family && cancelled.length > 0 && (
+      {cancelled.length > 0 && (
         <section className="mt-6">
           <h2 className="font-display mb-2 px-1 text-lg font-bold text-ink">
             Cancellati{' '}
@@ -192,18 +193,16 @@ export default function Subscriptions() {
         </section>
       )}
 
-      {family && (
-        <SubscriptionForm
-          open={creating || editing !== null}
-          onClose={() => {
-            setCreating(false)
-            setEditing(null)
-          }}
-          onSaved={refresh}
-          familyId={family.id}
-          initial={editing}
-        />
-      )}
+      <SubscriptionForm
+        open={creating || editing !== null}
+        onClose={() => {
+          setCreating(false)
+          setEditing(null)
+        }}
+        onSaved={refresh}
+        scope={scope}
+        initial={editing}
+      />
     </AppShell>
   )
 }

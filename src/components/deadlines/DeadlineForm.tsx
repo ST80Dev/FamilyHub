@@ -4,13 +4,14 @@ import { Button, Field, Input, Modal, Select, Textarea } from '../ui'
 import { supabase } from '../../lib/supabase'
 import { todayISO } from '../../lib/deadlineEngine'
 import { DEADLINE_META, DEADLINE_TYPES } from '../../lib/deadlineMeta'
+import type { RecordScope } from '../../lib/ownership'
 import type { Deadline, DeadlineType } from '../../types'
 
 interface Props {
   open: boolean
   onClose: () => void
   onSaved: () => void
-  familyId: string
+  scope: RecordScope
   initial?: Deadline | null
 }
 
@@ -36,7 +37,7 @@ function initialState(d?: Deadline | null): FormState {
   }
 }
 
-export function DeadlineForm({ open, onClose, onSaved, familyId, initial }: Props) {
+export function DeadlineForm({ open, onClose, onSaved, scope, initial }: Props) {
   return (
     <Modal
       open={open}
@@ -45,7 +46,7 @@ export function DeadlineForm({ open, onClose, onSaved, familyId, initial }: Prop
     >
       <DeadlineFormBody
         key={initial?.id ?? 'new'}
-        familyId={familyId}
+        scope={scope}
         initial={initial}
         onClose={onClose}
         onSaved={onSaved}
@@ -55,13 +56,13 @@ export function DeadlineForm({ open, onClose, onSaved, familyId, initial }: Prop
 }
 
 interface BodyProps {
-  familyId: string
+  scope: RecordScope
   initial?: Deadline | null
   onClose: () => void
   onSaved: () => void
 }
 
-function DeadlineFormBody({ familyId, initial, onClose, onSaved }: BodyProps) {
+function DeadlineFormBody({ scope, initial, onClose, onSaved }: BodyProps) {
   const [state, setState] = useState<FormState>(() => initialState(initial))
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -71,8 +72,7 @@ function DeadlineFormBody({ familyId, initial, onClose, onSaved }: BodyProps) {
     setError(null)
     setSubmitting(true)
     try {
-      const payload = {
-        family_id: familyId,
+      const base = {
         type: state.type,
         title: state.title.trim() || null,
         due_date: state.due_date,
@@ -85,8 +85,8 @@ function DeadlineFormBody({ familyId, initial, onClose, onSaved }: BodyProps) {
       }
 
       const query = initial
-        ? supabase.from('deadlines').update(payload).eq('id', initial.id)
-        : supabase.from('deadlines').insert(payload)
+        ? supabase.from('deadlines').update(base).eq('id', initial.id)
+        : supabase.from('deadlines').insert({ ...base, ...scope })
       const { error: e } = await query
       if (e) throw e
       onSaved()

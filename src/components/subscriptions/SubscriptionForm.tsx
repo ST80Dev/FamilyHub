@@ -8,6 +8,7 @@ import {
   SUBSCRIPTION_CATEGORIES,
   SUBSCRIPTION_META,
 } from '../../lib/subscriptionMeta'
+import type { RecordScope } from '../../lib/ownership'
 import type {
   BillingCycle,
   Subscription,
@@ -27,7 +28,7 @@ interface Props {
   open: boolean
   onClose: () => void
   onSaved: () => void
-  familyId: string
+  scope: RecordScope
   initial?: Subscription | null
 }
 
@@ -65,7 +66,7 @@ export function SubscriptionForm({
   open,
   onClose,
   onSaved,
-  familyId,
+  scope,
   initial,
 }: Props) {
   return (
@@ -76,7 +77,7 @@ export function SubscriptionForm({
     >
       <SubscriptionFormBody
         key={initial?.id ?? 'new'}
-        familyId={familyId}
+        scope={scope}
         initial={initial}
         onClose={onClose}
         onSaved={onSaved}
@@ -86,14 +87,14 @@ export function SubscriptionForm({
 }
 
 interface BodyProps {
-  familyId: string
+  scope: RecordScope
   initial?: Subscription | null
   onClose: () => void
   onSaved: () => void
 }
 
 function SubscriptionFormBody({
-  familyId,
+  scope,
   initial,
   onClose,
   onSaved,
@@ -107,8 +108,7 @@ function SubscriptionFormBody({
     setError(null)
     setSubmitting(true)
     try {
-      const payload = {
-        family_id: familyId,
+      const base = {
         name: state.name.trim(),
         provider: state.provider.trim() || null,
         category: state.category,
@@ -123,8 +123,8 @@ function SubscriptionFormBody({
       }
 
       const query = initial
-        ? supabase.from('subscriptions').update(payload).eq('id', initial.id)
-        : supabase.from('subscriptions').insert(payload)
+        ? supabase.from('subscriptions').update(base).eq('id', initial.id)
+        : supabase.from('subscriptions').insert({ ...base, ...scope })
       const { error: e } = await query
       if (e) throw e
       onSaved()
