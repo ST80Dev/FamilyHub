@@ -1,7 +1,7 @@
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
 import SignIn from './pages/SignIn'
-import Onboarding from './pages/Onboarding'
+import Family from './pages/Family'
 import { RequireAuth } from './components/RequireAuth'
 
 export default function App() {
@@ -9,13 +9,14 @@ export default function App() {
     <Routes>
       <Route path="/signin" element={<SignIn />} />
       <Route
-        path="/onboarding"
+        path="/famiglia"
         element={
-          <RequireAuth requireFamily={false}>
-            <Onboarding />
+          <RequireAuth>
+            <Family />
           </RequireAuth>
         }
       />
+      <Route path="/onboarding" element={<Navigate to="/famiglia" replace />} />
       <Route
         path="/"
         element={

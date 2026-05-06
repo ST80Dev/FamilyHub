@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useFamily } from '../hooks/useFamily'
 import { supabase } from '../lib/supabase'
@@ -9,19 +9,19 @@ import { Field, Input } from '../components/ui/Field'
 
 type Mode = 'create' | 'join'
 
-export default function Onboarding() {
+export default function Family() {
   const { user, loading: authLoading, signOut } = useAuth()
-  const { family, loading: famLoading, refresh } = useFamily()
+  const { family, membership, loading: famLoading, refresh } = useFamily()
   const [mode, setMode] = useState<Mode>('create')
   const [familyName, setFamilyName] = useState('')
   const [inviteCode, setInviteCode] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
 
   if (authLoading || famLoading) return null
   if (!user) return <Navigate to="/signin" replace />
-  if (family) return <Navigate to="/" replace />
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault()
@@ -60,14 +60,88 @@ export default function Onboarding() {
     }
   }
 
+  async function copyInvite() {
+    if (!family?.invite_code) return
+    await navigator.clipboard.writeText(family.invite_code)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
+
+  if (family) {
+    return (
+      <main className="mx-auto max-w-3xl p-6">
+        <header className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">Famiglia</h1>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Gestione del nucleo familiare e inviti.
+            </p>
+          </div>
+          <Link
+            to="/"
+            className="text-sm text-sky-600 hover:underline dark:text-sky-400"
+          >
+            ← Dashboard
+          </Link>
+        </header>
+
+        <section className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                {family.name}
+              </h2>
+              {membership?.role === 'owner' && (
+                <span className="mt-1 inline-block rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700 dark:bg-sky-900 dark:text-sky-200">
+                  owner
+                </span>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section className="mt-6 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
+          <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            Codice d'invito
+          </h2>
+          <div className="mt-2 flex items-center gap-3">
+            <p className="font-mono text-2xl tracking-[0.3em]">
+              {family.invite_code}
+            </p>
+            <Button variant="ghost" size="sm" onClick={copyInvite}>
+              {copied ? 'Copiato' : 'Copia'}
+            </Button>
+          </div>
+          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+            Condividi questo codice con gli altri membri della famiglia per farli
+            accedere agli stessi dati.
+          </p>
+        </section>
+
+        <div className="mt-8 text-center text-xs text-slate-500 dark:text-slate-400">
+          Connesso come <span className="font-medium">{user.email}</span>.{' '}
+          <button
+            onClick={signOut}
+            className="underline hover:text-slate-700 dark:hover:text-slate-300"
+          >
+            Esci
+          </button>
+        </div>
+      </main>
+    )
+  }
+
   return (
-    <main className="flex min-h-dvh items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">Benvenuto in FamilyHub</h1>
+    <main className="mx-auto flex min-h-dvh max-w-md items-center justify-center px-4 py-8">
+      <div className="w-full">
+        <div className="mb-6 text-center">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Configura il tuo nucleo
+          </h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            Crea il tuo nucleo familiare oppure unisciti a uno esistente con il
-            codice d'invito.
+            Crea una famiglia per condividere scadenze e abbonamenti, oppure
+            unisciti a una esistente con il codice d'invito. Puoi farlo anche
+            più tardi.
           </p>
         </div>
 
@@ -166,9 +240,21 @@ export default function Onboarding() {
           </form>
         )}
 
+        <div className="mt-6 text-center">
+          <Link
+            to="/"
+            className="text-sm text-slate-500 hover:text-slate-700 hover:underline dark:text-slate-400 dark:hover:text-slate-200"
+          >
+            Salta per ora
+          </Link>
+        </div>
+
         <div className="mt-8 text-center text-xs text-slate-500 dark:text-slate-400">
           Connesso come <span className="font-medium">{user.email}</span>.{' '}
-          <button onClick={signOut} className="underline hover:text-slate-700 dark:hover:text-slate-300">
+          <button
+            onClick={signOut}
+            className="underline hover:text-slate-700 dark:hover:text-slate-300"
+          >
             Esci
           </button>
         </div>
