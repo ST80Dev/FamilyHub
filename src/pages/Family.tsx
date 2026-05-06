@@ -85,6 +85,15 @@ export default function Family() {
   const [promoting, setPromoting] = useState(false)
   const [promoted, setPromoted] = useState<string | null>(null)
 
+  const [renaming, setRenaming] = useState(false)
+  const [renameValue, setRenameValue] = useState('')
+  const [renameError, setRenameError] = useState<string | null>(null)
+  const [renameSubmitting, setRenameSubmitting] = useState(false)
+
+  const [confirmingDissolve, setConfirmingDissolve] = useState(false)
+  const [dissolving, setDissolving] = useState(false)
+  const [dissolveError, setDissolveError] = useState<string | null>(null)
+
   // After joining/creating, see if user still has personal records to promote.
   useEffect(() => {
     if (!user || !family) return
@@ -173,6 +182,60 @@ export default function Family() {
     setPendingPromotion(null)
   }
 
+  function startRename() {
+    if (!family) return
+    setRenameValue(family.name)
+    setRenameError(null)
+    setRenaming(true)
+  }
+
+  async function submitRename(e: FormEvent) {
+    e.preventDefault()
+    if (!family) return
+    const next = renameValue.trim()
+    if (!next || next === family.name) {
+      setRenaming(false)
+      return
+    }
+    setRenameSubmitting(true)
+    setRenameError(null)
+    try {
+      const { error: updErr } = await supabase
+        .from('families')
+        .update({ name: next })
+        .eq('id', family.id)
+      if (updErr) throw updErr
+      setRenaming(false)
+      refresh()
+    } catch (err) {
+      setRenameError(err instanceof Error ? err.message : 'Errore rinomina')
+    } finally {
+      setRenameSubmitting(false)
+    }
+  }
+
+  async function handleDissolve() {
+    if (!family) return
+    setDissolving(true)
+    setDissolveError(null)
+    try {
+      const { error: rpcErr } = await supabase.rpc(
+        'demote_family_to_personal',
+        { target_family: family.id },
+      )
+      if (rpcErr) throw rpcErr
+      setConfirmingDissolve(false)
+      // Reset eventuale prompt promotion sulla famiglia che non c'è più.
+      setPendingPromotion(null)
+      setPromoted(null)
+      refresh()
+    } catch (err) {
+      setDissolveError(err instanceof Error ? err.message : 'Errore eliminazione')
+    } finally {
+      setDissolving(false)
+    }
+  }
+
   if (family) {
     return (
       <AppShell>
@@ -217,18 +280,56 @@ export default function Family() {
         )}
 
         <Card variant="surface" padding="lg" radius="xl" className="mt-6">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="font-display text-xl font-bold text-ink">
-                {family.name}
-              </h2>
+          {renaming && membership?.role === 'owner' ? (
+            <form onSubmit={submitRename} className="space-y-3">
+              <Field label="Nome del nucleo">
+                <Input
+                  required
+                  autoFocus
+                  maxLength={60}
+                  value={renameValue}
+                  onChange={(e) => setRenameValue(e.target.value)}
+                />
+              </Field>
+              {renameError && (
+                <div className="rounded-2xl bg-[color:var(--candy-peach)]/30 px-3 py-2 text-sm text-[color:var(--candy-ink)]">
+                  {renameError}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <Button type="submit" size="sm" loading={renameSubmitting}>
+                  Salva
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={renameSubmitting}
+                  onClick={() => setRenaming(false)}
+                >
+                  Annulla
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="font-display text-xl font-bold text-ink">
+                  {family.name}
+                </h2>
+                {membership?.role === 'owner' && (
+                  <span className="mt-2 inline-block rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider candy-lemon-grad text-[color:var(--candy-ink)]">
+                    Owner
+                  </span>
+                )}
+              </div>
               {membership?.role === 'owner' && (
-                <span className="mt-2 inline-block rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider candy-lemon-grad text-[color:var(--candy-ink)]">
-                  Owner
-                </span>
+                <Button size="sm" variant="secondary" onClick={startRename}>
+                  Rinomina
+                </Button>
               )}
             </div>
-          </div>
+          )}
         </Card>
 
         <Card variant="surface" padding="lg" radius="xl" className="mt-4">
@@ -248,6 +349,57 @@ export default function Family() {
             accedere agli stessi dati.
           </p>
         </Card>
+
+        {membership?.role === 'owner' && (
+          <Card variant="surface" padding="lg" radius="xl" className="mt-4">
+            <h2 className="font-display text-lg font-bold text-ink">
+              Sciogli il nucleo
+            </h2>
+            <p className="mt-1 text-sm text-ink-soft">
+              Cancella la famiglia e riporta tutti i record (persone, scadenze,
+              abbonamenti…) tra i tuoi dati personali. Disponibile solo se sei
+              l'unico membro.
+            </p>
+            {!confirmingDissolve ? (
+              <div className="mt-3">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setDissolveError(null)
+                    setConfirmingDissolve(true)
+                  }}
+                >
+                  Sciogli famiglia
+                </Button>
+              </div>
+            ) : (
+              <div className="mt-3 space-y-2">
+                <p className="text-sm font-semibold text-ink">
+                  Confermi? I dati restano tuoi, ma non saranno più condivisi.
+                </p>
+                {dissolveError && (
+                  <div className="rounded-2xl bg-[color:var(--candy-peach)]/30 px-3 py-2 text-sm text-[color:var(--candy-ink)]">
+                    {dissolveError}
+                  </div>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" loading={dissolving} onClick={handleDissolve}>
+                    Sì, sciogli
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={dissolving}
+                    onClick={() => setConfirmingDissolve(false)}
+                  >
+                    Annulla
+                  </Button>
+                </div>
+              </div>
+            )}
+          </Card>
+        )}
       </AppShell>
     )
   }
