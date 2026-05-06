@@ -106,6 +106,9 @@ function SubscriptionFormBody({
   const [state, setState] = useState<FormState>(() => initialState(initial))
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [notesExpanded, setNotesExpanded] = useState(() =>
+    Boolean(initial?.notes),
+  )
   const { paymentMethods } = usePaymentMethods()
 
   async function handleSubmit(e: FormEvent) {
@@ -316,14 +319,33 @@ function SubscriptionFormBody({
         </Select>
       </Field>
 
-      <Field label="Note">
-        <Textarea
-          rows={2}
-          maxLength={500}
-          value={state.notes}
-          onChange={(e) => setState((s) => ({ ...s, notes: e.target.value }))}
-        />
-      </Field>
+      <div className="block">
+        <button
+          type="button"
+          onClick={() => setNotesExpanded((v) => !v)}
+          className="flex w-full items-center justify-between text-xs font-semibold uppercase tracking-wider text-ink-soft hover:text-ink"
+        >
+          <span>
+            Note
+            {!notesExpanded && state.notes
+              ? ` · ${state.notes.length} caratteri`
+              : ''}
+          </span>
+          <span aria-hidden className="text-base leading-none">
+            {notesExpanded ? '−' : '+'}
+          </span>
+        </button>
+        {notesExpanded && (
+          <Textarea
+            className="mt-1.5"
+            rows={2}
+            maxLength={500}
+            value={state.notes}
+            onChange={(e) => setState((s) => ({ ...s, notes: e.target.value }))}
+            autoFocus
+          />
+        )}
+      </div>
 
       {error && (
         <div className="rounded-2xl bg-[color:var(--candy-peach)]/30 px-3 py-2 text-sm text-[color:var(--candy-ink)]">
