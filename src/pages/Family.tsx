@@ -111,12 +111,10 @@ export default function Family() {
     setError(null)
     setSubmitting(true)
     try {
-      const { error: insErr } = await supabase
-        .from('families')
-        .insert({ name: familyName.trim() })
-        .select('id')
-        .single()
-      if (insErr) throw insErr
+      const { error: rpcErr } = await supabase.rpc('create_family', {
+        p_name: familyName.trim(),
+      })
+      if (rpcErr) throw rpcErr
       refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Errore creazione famiglia')
