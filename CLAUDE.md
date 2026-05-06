@@ -188,6 +188,24 @@ corrente.
 - I componenti UI per categoria stanno in `src/components/<categoria>/`,
   le pagine in `src/pages/`
 
+## Workflow git e branching
+
+- **All'inizio di ogni nuova attività**, prima di toccare il codice:
+  `git fetch origin --prune && git log origin/main --oneline -10` per vedere
+  lo stato reale di `main` sul remoto.
+- **Verificare se eventuali branch precedenti sono stati mergiati su `main`**
+  (non su altri branch intermedi). Controllare i merge commit puntando a
+  `origin/main`, non a branch ereditati.
+- **Creare nuovi branch sempre da `origin/main` aggiornato**, mai da un
+  branch ereditato dalla sessione precedente. Pattern:
+  `git checkout -B <nuovo-branch> origin/main`.
+- **Quando si apre una PR**: il target deve essere `main`. Verificare
+  esplicitamente nel form PR e nella descrizione che la base sia `main` e
+  non un altro branch di lavoro.
+- **Dopo il merge**: il deploy di produzione su Vercel parte da `main`. Se
+  una PR viene mergiata su un branch diverso, la produzione non si aggiorna
+  e Claude/sviluppatore devono accorgersene controllando `origin/main`.
+
 ## Deploy & infrastruttura
 
 ### Setup attuale (fase familiare / sviluppo)
