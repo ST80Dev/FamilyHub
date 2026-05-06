@@ -60,7 +60,11 @@ export default function Dashboard() {
   const { user } = useAuth()
   const { family, membership, loading: famLoading } = useFamily()
   const { deadlines, loading: dlLoading } = useDeadlines()
-  const { subscriptions, loading: subLoading } = useSubscriptions()
+  const { subscriptions: allSubs, loading: subLoading } = useSubscriptions()
+  const subscriptions = useMemo(
+    () => allSubs.filter((s) => s.status === 'active'),
+    [allSubs],
+  )
 
   const upcoming = useMemo(() => {
     return deadlines
@@ -247,20 +251,21 @@ export default function Dashboard() {
             {subscriptions.slice(0, 4).map((s, i) => {
               const next = ensureNextBilling(s)
               return (
-                <Card
-                  key={s.id}
-                  variant={SUB_CARD_TONES[i % SUB_CARD_TONES.length]}
-                  padding="md"
-                  radius="lg"
-                >
-                  <div className="text-sm font-bold leading-tight">{s.name}</div>
-                  <div className="font-display mt-1 text-xl font-bold leading-none">
-                    {formatCurrency(s.amount)}
-                  </div>
-                  <div className="mt-1 text-[11px] font-semibold opacity-80">
-                    {next ? `addebito · ${formatDate(next)}` : s.billing_cycle}
-                  </div>
-                </Card>
+                <Link key={s.id} to="/abbonamenti" className="block">
+                  <Card
+                    variant={SUB_CARD_TONES[i % SUB_CARD_TONES.length]}
+                    padding="md"
+                    radius="lg"
+                  >
+                    <div className="text-sm font-bold leading-tight">{s.name}</div>
+                    <div className="font-display mt-1 text-xl font-bold leading-none">
+                      {formatCurrency(s.amount, s.currency)}
+                    </div>
+                    <div className="mt-1 text-[11px] font-semibold opacity-80">
+                      {next ? `addebito · ${formatDate(next)}` : s.billing_cycle}
+                    </div>
+                  </Card>
+                </Link>
               )
             })}
           </div>
@@ -278,6 +283,13 @@ export default function Dashboard() {
               Quando li aggiungi vedrai qui la spesa mensile e il prossimo
               addebito.
             </p>
+            <div className="mt-3">
+              <Link to="/abbonamenti">
+                <Button size="sm" variant="secondary">
+                  Aggiungi abbonamento
+                </Button>
+              </Link>
+            </div>
           </Card>
         </section>
       )}
