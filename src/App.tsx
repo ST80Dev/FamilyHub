@@ -3,6 +3,7 @@ import Dashboard from './pages/Dashboard'
 import SignIn from './pages/SignIn'
 import Family from './pages/Family'
 import Deadlines from './pages/Deadlines'
+import Subscriptions from './pages/Subscriptions'
 import Settings from './pages/Settings'
 import Placeholder from './pages/Placeholder'
 import { RequireAuth } from './components/RequireAuth'
@@ -32,11 +33,7 @@ export default function App() {
         path="/abbonamenti"
         element={
           <RequireAuth>
-            <Placeholder
-              title="Abbonamenti"
-              icon="💳"
-              description="Streaming, telefonia, palestra: terrai d'occhio i rinnovi e la spesa mensile totale."
-            />
+            <Subscriptions />
           </RequireAuth>
         }
       />

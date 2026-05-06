@@ -30,7 +30,6 @@ export function useSubscriptions(): UseSubscriptionsResult {
         .from('subscriptions')
         .select('*')
         .eq('family_id', family.id)
-        .eq('status', 'active')
         .order('next_billing_date', { ascending: true, nullsFirst: false })
 
       if (cancelled) return
