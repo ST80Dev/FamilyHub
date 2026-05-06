@@ -2,7 +2,7 @@ import type { Deadline } from '../../types'
 import { Card, IconTile, Badge } from '../ui'
 import { deadlineMeta } from '../../lib/deadlineMeta'
 import { daysUntil, urgencyBucket } from '../../lib/deadlineEngine'
-import { formatDate } from '../../lib/format'
+import { formatCurrency, formatDate } from '../../lib/format'
 
 interface Props {
   deadline: Deadline
@@ -56,6 +56,12 @@ export function DeadlineCard({ deadline, onClick }: Props) {
         )}
       </div>
       <div className="flex flex-shrink-0 flex-col items-end gap-1">
+        {deadline.amount != null && (
+          <span className="font-display text-sm font-bold text-ink">
+            {deadline.amount_is_estimated ? '~ ' : ''}
+            {formatCurrency(deadline.amount, deadline.currency)}
+          </span>
+        )}
         <span className="text-[11px] font-semibold text-ink-soft">
           {formatDate(deadline.due_date)}
         </span>

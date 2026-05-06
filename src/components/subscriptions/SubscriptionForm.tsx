@@ -8,6 +8,8 @@ import {
   SUBSCRIPTION_CATEGORIES,
   SUBSCRIPTION_META,
 } from '../../lib/subscriptionMeta'
+import { paymentMethodLabel } from '../../lib/paymentMethodMeta'
+import { usePaymentMethods } from '../../hooks/usePaymentMethods'
 import type { RecordScope } from '../../lib/ownership'
 import type {
   BillingCycle,
@@ -44,6 +46,7 @@ interface FormState {
   auto_renews: boolean
   reminder_days_before: string
   notes: string
+  payment_method_id: string
 }
 
 function initialState(s?: Subscription | null): FormState {
@@ -59,6 +62,7 @@ function initialState(s?: Subscription | null): FormState {
     auto_renews: s?.auto_renews ?? true,
     reminder_days_before: String(s?.reminder_days_before ?? 3),
     notes: s?.notes ?? '',
+    payment_method_id: s?.payment_method_id ?? '',
   }
 }
 
@@ -102,6 +106,7 @@ function SubscriptionFormBody({
   const [state, setState] = useState<FormState>(() => initialState(initial))
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { paymentMethods } = usePaymentMethods()
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -120,6 +125,7 @@ function SubscriptionFormBody({
         auto_renews: state.auto_renews,
         reminder_days_before: Number(state.reminder_days_before) || 3,
         notes: state.notes.trim() || null,
+        payment_method_id: state.payment_method_id || null,
       }
 
       const query = initial
@@ -286,6 +292,29 @@ function SubscriptionFormBody({
         />
         Si rinnova automaticamente
       </label>
+
+      <Field
+        label="Metodo di pagamento"
+        hint={
+          paymentMethods.length === 0
+            ? 'Aggiungi i tuoi metodi dalle Impostazioni'
+            : undefined
+        }
+      >
+        <Select
+          value={state.payment_method_id}
+          onChange={(e) =>
+            setState((s) => ({ ...s, payment_method_id: e.target.value }))
+          }
+        >
+          <option value="">— Nessuno —</option>
+          {paymentMethods.map((pm) => (
+            <option key={pm.id} value={pm.id}>
+              {paymentMethodLabel(pm)}
+            </option>
+          ))}
+        </Select>
+      </Field>
 
       <Field label="Note">
         <Textarea

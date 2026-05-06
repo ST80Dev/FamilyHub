@@ -4,6 +4,9 @@ import { Button, Field, Input, Modal, Select, Textarea } from '../ui'
 import { supabase } from '../../lib/supabase'
 import { todayISO } from '../../lib/deadlineEngine'
 import { DEADLINE_META, DEADLINE_TYPES } from '../../lib/deadlineMeta'
+import { paymentMethodLabel } from '../../lib/paymentMethodMeta'
+import { useFamilyMembers } from '../../hooks/useFamilyMembers'
+import { usePaymentMethods } from '../../hooks/usePaymentMethods'
 import type { RecordScope } from '../../lib/ownership'
 import type { Deadline, DeadlineType } from '../../types'
 
@@ -23,6 +26,10 @@ interface FormState {
   is_recurring: boolean
   recurrence_months: string
   reminder_days_before: string
+  amount: string
+  amount_is_estimated: boolean
+  payment_method_id: string
+  assigned_to_member_id: string
 }
 
 function initialState(d?: Deadline | null): FormState {
@@ -34,6 +41,10 @@ function initialState(d?: Deadline | null): FormState {
     is_recurring: d?.is_recurring ?? false,
     recurrence_months: d?.recurrence_months ? String(d.recurrence_months) : '12',
     reminder_days_before: String(d?.reminder_days_before ?? 7),
+    amount: d?.amount != null ? String(d.amount) : '',
+    amount_is_estimated: d?.amount_is_estimated ?? false,
+    payment_method_id: d?.payment_method_id ?? '',
+    assigned_to_member_id: d?.assigned_to_member_id ?? '',
   }
 }
 
@@ -66,12 +77,20 @@ function DeadlineFormBody({ scope, initial, onClose, onSaved }: BodyProps) {
   const [state, setState] = useState<FormState>(() => initialState(initial))
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { members } = useFamilyMembers()
+  const { paymentMethods } = usePaymentMethods()
+
+  const isFamilyScope = scope.family_id !== null
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
     setSubmitting(true)
     try {
+      const parsedAmount =
+        state.amount.trim() === ''
+          ? null
+          : Number(state.amount.replace(',', '.'))
       const base = {
         type: state.type,
         title: state.title.trim() || null,
@@ -82,6 +101,16 @@ function DeadlineFormBody({ scope, initial, onClose, onSaved }: BodyProps) {
           ? Number(state.recurrence_months) || null
           : null,
         reminder_days_before: Number(state.reminder_days_before) || 7,
+        amount: parsedAmount != null && !Number.isNaN(parsedAmount) ? parsedAmount : null,
+        amount_is_estimated:
+          parsedAmount != null && !Number.isNaN(parsedAmount)
+            ? state.amount_is_estimated
+            : false,
+        payment_method_id: state.payment_method_id || null,
+        assigned_to_member_id:
+          isFamilyScope && state.assigned_to_member_id
+            ? state.assigned_to_member_id
+            : null,
       }
 
       const query = initial
@@ -119,6 +148,24 @@ function DeadlineFormBody({ scope, initial, onClose, onSaved }: BodyProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
+        {isFamilyScope && (
+          <Field label="Per chi?" hint="Predefinito: tutta la famiglia">
+            <Select
+              value={state.assigned_to_member_id}
+              onChange={(e) =>
+                setState((s) => ({ ...s, assigned_to_member_id: e.target.value }))
+              }
+            >
+              <option value="">👪 Tutta la famiglia</option>
+              {members.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.display_name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        )}
+
         <Field label="Tipo">
           <Select
             value={state.type}
@@ -153,6 +200,57 @@ function DeadlineFormBody({ scope, initial, onClose, onSaved }: BodyProps) {
             onChange={(e) => setState((s) => ({ ...s, due_date: e.target.value }))}
             required
           />
+        </Field>
+
+        <div className="grid grid-cols-[1fr_auto] gap-3">
+          <Field
+            label="Importo (€)"
+            hint="Lascia vuoto se non lo conosci"
+          >
+            <Input
+              inputMode="decimal"
+              placeholder="0,00"
+              value={state.amount}
+              onChange={(e) => setState((s) => ({ ...s, amount: e.target.value }))}
+            />
+          </Field>
+          <Field label=" ">
+            <label className="flex h-[42px] items-center gap-2 px-1 text-sm font-medium text-ink">
+              <input
+                type="checkbox"
+                checked={state.amount_is_estimated}
+                onChange={(e) =>
+                  setState((s) => ({ ...s, amount_is_estimated: e.target.checked }))
+                }
+                disabled={state.amount.trim() === ''}
+                className="h-4 w-4 accent-[color:var(--candy-peach-2)]"
+              />
+              Stimato
+            </label>
+          </Field>
+        </div>
+
+        <Field
+          label="Metodo di pagamento"
+          hint={
+            paymentMethods.length === 0
+              ? 'Aggiungi i tuoi metodi dalle Impostazioni'
+              : undefined
+          }
+        >
+          <Select
+            value={state.payment_method_id}
+            onChange={(e) =>
+              setState((s) => ({ ...s, payment_method_id: e.target.value }))
+            }
+          >
+            <option value="">— Nessuno —</option>
+            {paymentMethods.map((pm) => (
+              <option key={pm.id} value={pm.id}>
+                {paymentMethodLabel(pm)}
+              </option>
+            ))}
+          </Select>
         </Field>
 
         <Field label="Note">

@@ -6,6 +6,7 @@ import { useFamily } from '../hooks/useFamily'
 import { useDeadlines } from '../hooks/useDeadlines'
 import { useSubscriptions } from '../hooks/useSubscriptions'
 import { DeadlineCard } from '../components/deadlines/DeadlineCard'
+import { WeeklyExpenses } from '../components/payment/WeeklyExpenses'
 import { useAuth } from '../hooks/useAuth'
 import {
   daysUntil,
@@ -192,6 +193,8 @@ export default function Dashboard() {
           </div>
         </Card>
       </div>
+
+      <WeeklyExpenses />
 
       {/* In arrivo */}
       <section className="mt-6">
