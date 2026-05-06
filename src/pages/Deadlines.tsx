@@ -5,6 +5,7 @@ import { Button, Card } from '../components/ui'
 import { useAuth } from '../hooks/useAuth'
 import { useFamily } from '../hooks/useFamily'
 import { useDeadlines } from '../hooks/useDeadlines'
+import { usePersons } from '../hooks/usePersons'
 import { DeadlineCard } from '../components/deadlines/DeadlineCard'
 import { DeadlineForm } from '../components/deadlines/DeadlineForm'
 import { urgencyBucket } from '../lib/deadlineEngine'
@@ -27,6 +28,11 @@ export default function Deadlines() {
   const { user } = useAuth()
   const { family, loading: famLoading } = useFamily()
   const { deadlines, loading, refresh } = useDeadlines()
+  const { persons } = usePersons()
+  const personById = useMemo(
+    () => new Map(persons.map((p) => [p.id, p])),
+    [persons],
+  )
   const [editing, setEditing] = useState<Deadline | null>(null)
   const [creating, setCreating] = useState(false)
 
@@ -121,6 +127,7 @@ export default function Deadlines() {
                     <DeadlineCard
                       key={d.id}
                       deadline={d}
+                      person={d.person_id ? personById.get(d.person_id) : null}
                       onClick={() => setEditing(d)}
                     />
                   ))}

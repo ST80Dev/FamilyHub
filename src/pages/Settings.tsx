@@ -5,6 +5,8 @@ import { useAuth } from '../hooks/useAuth'
 import { useTheme } from '../hooks/useTheme'
 import { THEMES } from '../lib/theme'
 import type { Theme } from '../lib/theme'
+import { PaymentMethodsSection } from '../components/payment/PaymentMethodsSection'
+import { PersonsSection } from '../components/persons/PersonsSection'
 
 const THEME_LABEL: Record<Theme, string> = {
   pesca: 'Pesca',
@@ -82,6 +84,10 @@ export default function Settings() {
           </Link>
         </div>
       </Card>
+
+      <PersonsSection />
+
+      <PaymentMethodsSection />
 
       <Card variant="surface" padding="lg" radius="xl" className="mt-4">
         <h2 className="font-display text-lg font-bold text-ink">Account</h2>

@@ -16,14 +16,18 @@ export type Database = {
     Tables: {
       deadlines: {
         Row: {
+          amount: number | null
+          amount_is_estimated: boolean
           assigned_to_member_id: string | null
           created_at: string
+          currency: string
           due_date: string
           family_id: string | null
           id: string
           is_recurring: boolean
           notes: string | null
           owner_user_id: string | null
+          payment_method_id: string | null
           person_id: string | null
           pet_id: string | null
           recurrence_months: number | null
@@ -35,14 +39,18 @@ export type Database = {
           vehicle_id: string | null
         }
         Insert: {
+          amount?: number | null
+          amount_is_estimated?: boolean
           assigned_to_member_id?: string | null
           created_at?: string
+          currency?: string
           due_date: string
           family_id?: string | null
           id?: string
           is_recurring?: boolean
           notes?: string | null
           owner_user_id?: string | null
+          payment_method_id?: string | null
           person_id?: string | null
           pet_id?: string | null
           recurrence_months?: number | null
@@ -54,14 +62,18 @@ export type Database = {
           vehicle_id?: string | null
         }
         Update: {
+          amount?: number | null
+          amount_is_estimated?: boolean
           assigned_to_member_id?: string | null
           created_at?: string
+          currency?: string
           due_date?: string
           family_id?: string | null
           id?: string
           is_recurring?: boolean
           notes?: string | null
           owner_user_id?: string | null
+          payment_method_id?: string | null
           person_id?: string | null
           pet_id?: string | null
           recurrence_months?: number | null
@@ -72,43 +84,7 @@ export type Database = {
           updated_at?: string
           vehicle_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "deadlines_assigned_to_member_id_fkey"
-            columns: ["assigned_to_member_id"]
-            isOneToOne: false
-            referencedRelation: "family_members"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "deadlines_family_id_fkey"
-            columns: ["family_id"]
-            isOneToOne: false
-            referencedRelation: "families"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "deadlines_person_id_fkey"
-            columns: ["person_id"]
-            isOneToOne: false
-            referencedRelation: "persons"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "deadlines_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "pets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "deadlines_vehicle_id_fkey"
-            columns: ["vehicle_id"]
-            isOneToOne: false
-            referencedRelation: "vehicles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       families: {
         Row: {
@@ -156,15 +132,7 @@ export type Database = {
           role?: Database["public"]["Enums"]["member_role"]
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "family_members_family_id_fkey"
-            columns: ["family_id"]
-            isOneToOne: false
-            referencedRelation: "families"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       home_maintenance: {
         Row: {
@@ -224,32 +192,53 @@ export type Database = {
           updated_at?: string
           vehicle_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "home_maintenance_family_id_fkey"
-            columns: ["family_id"]
-            isOneToOne: false
-            referencedRelation: "families"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "home_maintenance_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "pets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "home_maintenance_vehicle_id_fkey"
-            columns: ["vehicle_id"]
-            isOneToOne: false
-            referencedRelation: "vehicles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
+      }
+      payment_methods: {
+        Row: {
+          color: string | null
+          created_at: string
+          family_id: string | null
+          id: string
+          is_default: boolean
+          issuer: string | null
+          label: string
+          last4: string | null
+          owner_user_id: string | null
+          type: Database["public"]["Enums"]["payment_method_type"]
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          family_id?: string | null
+          id?: string
+          is_default?: boolean
+          issuer?: string | null
+          label: string
+          last4?: string | null
+          owner_user_id?: string | null
+          type?: Database["public"]["Enums"]["payment_method_type"]
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          family_id?: string | null
+          id?: string
+          is_default?: boolean
+          issuer?: string | null
+          label?: string
+          last4?: string | null
+          owner_user_id?: string | null
+          type?: Database["public"]["Enums"]["payment_method_type"]
+          updated_at?: string
+        }
+        Relationships: []
       }
       persons: {
         Row: {
+          avatar_emoji: string | null
           birth_date: string | null
           comune_residenza: string | null
           created_at: string
@@ -257,11 +246,14 @@ export type Database = {
           family_id: string | null
           id: string
           is_minor: boolean
+          kind: Database["public"]["Enums"]["person_kind"]
           notes: string | null
           owner_user_id: string | null
+          species: string | null
           updated_at: string
         }
         Insert: {
+          avatar_emoji?: string | null
           birth_date?: string | null
           comune_residenza?: string | null
           created_at?: string
@@ -269,11 +261,14 @@ export type Database = {
           family_id?: string | null
           id?: string
           is_minor?: boolean
+          kind?: Database["public"]["Enums"]["person_kind"]
           notes?: string | null
           owner_user_id?: string | null
+          species?: string | null
           updated_at?: string
         }
         Update: {
+          avatar_emoji?: string | null
           birth_date?: string | null
           comune_residenza?: string | null
           created_at?: string
@@ -281,19 +276,13 @@ export type Database = {
           family_id?: string | null
           id?: string
           is_minor?: boolean
+          kind?: Database["public"]["Enums"]["person_kind"]
           notes?: string | null
           owner_user_id?: string | null
+          species?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "persons_family_id_fkey"
-            columns: ["family_id"]
-            isOneToOne: false
-            referencedRelation: "families"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       pets: {
         Row: {
@@ -332,15 +321,7 @@ export type Database = {
           species?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "pets_family_id_fkey"
-            columns: ["family_id"]
-            isOneToOne: false
-            referencedRelation: "families"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       subscriptions: {
         Row: {
@@ -356,6 +337,7 @@ export type Database = {
           next_billing_date: string | null
           notes: string | null
           owner_user_id: string | null
+          payment_method_id: string | null
           person_id: string | null
           provider: string | null
           reminder_days_before: number
@@ -375,6 +357,7 @@ export type Database = {
           next_billing_date?: string | null
           notes?: string | null
           owner_user_id?: string | null
+          payment_method_id?: string | null
           person_id?: string | null
           provider?: string | null
           reminder_days_before?: number
@@ -394,28 +377,14 @@ export type Database = {
           next_billing_date?: string | null
           notes?: string | null
           owner_user_id?: string | null
+          payment_method_id?: string | null
           person_id?: string | null
           provider?: string | null
           reminder_days_before?: number
           status?: Database["public"]["Enums"]["subscription_status"]
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "subscriptions_family_id_fkey"
-            columns: ["family_id"]
-            isOneToOne: false
-            referencedRelation: "families"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "subscriptions_person_id_fkey"
-            columns: ["person_id"]
-            isOneToOne: false
-            referencedRelation: "persons"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       vehicles: {
         Row: {
@@ -463,22 +432,7 @@ export type Database = {
           type?: Database["public"]["Enums"]["vehicle_type"]
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "vehicles_family_id_fkey"
-            columns: ["family_id"]
-            isOneToOne: false
-            referencedRelation: "families"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vehicles_person_id_fkey"
-            columns: ["person_id"]
-            isOneToOne: false
-            referencedRelation: "persons"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       vouchers: {
         Row: {
@@ -535,22 +489,7 @@ export type Database = {
           type?: Database["public"]["Enums"]["voucher_type"]
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "vouchers_family_id_fkey"
-            columns: ["family_id"]
-            isOneToOne: false
-            referencedRelation: "families"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vouchers_person_id_fkey"
-            columns: ["person_id"]
-            isOneToOne: false
-            referencedRelation: "persons"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       warranties: {
         Row: {
@@ -613,22 +552,7 @@ export type Database = {
           updated_at?: string
           warranty_months?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "warranties_family_id_fkey"
-            columns: ["family_id"]
-            isOneToOne: false
-            referencedRelation: "families"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "warranties_person_id_fkey"
-            columns: ["person_id"]
-            isOneToOne: false
-            referencedRelation: "persons"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
@@ -692,6 +616,12 @@ export type Database = {
       maintenance_interval_type: "months" | "km" | "once"
       maintenance_status: "pending" | "done"
       member_role: "owner" | "member"
+      payment_method_type:
+        | "credit_card"
+        | "debit_card"
+        | "bank_account"
+        | "other"
+      person_kind: "human" | "pet"
       subscription_category:
         | "streaming"
         | "musica"
@@ -721,188 +651,3 @@ export type Database = {
     }
   }
 }
-
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
-
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
-
-export type Tables<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never
-
-export type TablesInsert<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
-
-export type TablesUpdate<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never
-
-export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
-
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
-
-export const Constants = {
-  public: {
-    Enums: {
-      billing_cycle: ["monthly", "quarterly", "semiannual", "annual"],
-      deadline_status: ["pending", "done", "snoozed"],
-      deadline_type: [
-        "bollo_auto",
-        "revisione_auto",
-        "patente",
-        "cie",
-        "passaporto",
-        "spid",
-        "esenzione_ticket",
-        "ricetta_medica",
-        "visita_medica",
-        "assicurazione_auto",
-        "assicurazione_casa",
-        "contratto_affitto",
-        "dichiarazione_redditi",
-        "imu",
-        "tari",
-        "f24",
-        "custom",
-      ],
-      maintenance_category: [
-        "caldaia",
-        "filtri_aria",
-        "estintore",
-        "tagliando_auto",
-        "cambio_gomme",
-        "visita_veterinaria",
-        "vaccino_animale",
-        "sverminazione",
-        "pulizia_canne_fumarie",
-        "altro",
-      ],
-      maintenance_interval_type: ["months", "km", "once"],
-      maintenance_status: ["pending", "done"],
-      member_role: ["owner", "member"],
-      subscription_category: [
-        "streaming",
-        "musica",
-        "gaming",
-        "software",
-        "palestra",
-        "parcheggio",
-        "assicurazione",
-        "telefonia",
-        "internet",
-        "giornali",
-        "cloud_storage",
-        "altro",
-      ],
-      subscription_status: ["active", "cancelled", "paused"],
-      vehicle_type: ["auto", "moto", "altro"],
-      voucher_status: ["available", "used", "expired"],
-      voucher_type: [
-        "regalo",
-        "rimborso",
-        "reso",
-        "cashback",
-        "coupon",
-        "altro",
-      ],
-    },
-  },
-} as const
