@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FamilyHub · Stile 2 · Caramelle / Claymorphism</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,700&display=swap" rel="stylesheet">
+<style>
+  /* ---- Palette accenti caramella (uguale per tutti i temi) ---- */
+  :root{
+    --peach:#FFB39E;
+    --mint:#A6E3C7;
+    --sky:#A8D5F2;
+    --lemon:#FFE89E;
+    --lilac:#D7C4F2;
+    --pink:#FFC1D6;
+    --candy-ink:#3B2C2A; /* testo SEMPRE scuro sopra card colorate */
+
+    /* default = pesca */
+    --bg:#FFF1E6;
+    --bg2:#FFE3D6;
+    --surface:#ffffff;
+    --ink:#3B2C2A;
+    --ink-soft:#6E5A57;
+    --shadow-out: 6px 6px 14px rgba(180,120,90,.18), -1px -1px 3px rgba(255,255,255,.35);
+    --shadow-in: inset 2px 2px 6px rgba(180,120,90,.14), inset -1px -1px 3px rgba(255,255,255,.4);
+  }
+
+  /* ---- Temi ---- */
+  [data-theme="rosa"]{
+    --bg:#FFE4EC; --bg2:#FBC8DA;
+    --surface:#ffffff;
+    --ink:#4A2A35; --ink-soft:#8A5A6E;
+    --shadow-out: 6px 6px 14px rgba(180,90,120,.18), -1px -1px 3px rgba(255,255,255,.35);
+    --shadow-in: inset 2px 2px 6px rgba(180,90,120,.14), inset -1px -1px 3px rgba(255,255,255,.4);
+  }
+  [data-theme="blu"]{
+    --bg:#E3EEFB; --bg2:#C7DCF4;
+    --surface:#ffffff;
+    --ink:#1F3046; --ink-soft:#5C6E85;
+    --shadow-out: 6px 6px 14px rgba(70,110,160,.18), -1px -1px 3px rgba(255,255,255,.4);
+    --shadow-in: inset 2px 2px 6px rgba(70,110,160,.14), inset -1px -1px 3px rgba(255,255,255,.45);
+  }
+  [data-theme="verde"]{
+    --bg:#E4F4E8; --bg2:#C7E8D1;
+    --surface:#ffffff;
+    --ink:#244033; --ink-soft:#5C7B68;
+    --shadow-out: 6px 6px 14px rgba(80,140,100,.18), -1px -1px 3px rgba(255,255,255,.4);
+    --shadow-in: inset 2px 2px 6px rgba(80,140,100,.14), inset -1px -1px 3px rgba(255,255,255,.45);
+  }
+  [data-theme="giallo"]{
+    --bg:#FFF6D6; --bg2:#FFE9A8;
+    --surface:#ffffff;
+    --ink:#4A3A14; --ink-soft:#86713B;
+    --shadow-out: 6px 6px 14px rgba(180,140,40,.18), -1px -1px 3px rgba(255,255,255,.35);
+    --shadow-in: inset 2px 2px 6px rgba(180,140,40,.14), inset -1px -1px 3px rgba(255,255,255,.4);
+  }
+  [data-theme="scuro"]{
+    --bg:#1F1B1A; --bg2:#2A2422;
+    --surface:#2E2826;
+    --ink:#F4E9D8; --ink-soft:#B5A89B;
+    --shadow-out: 6px 6px 16px rgba(0,0,0,.45), -1px -1px 3px rgba(255,255,255,.03);
+    --shadow-in: inset 2px 2px 6px rgba(0,0,0,.4), inset -1px -1px 3px rgba(255,255,255,.04);
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;color:var(--ink);font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg) 0%,var(--bg2) 100%);transition:background .35s ease, color .35s ease}
+
+  /* ---- Theme switcher ---- */
+  .switcher{max-width:440px;margin:18px auto 6px;display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border-radius:22px;box-shadow:var(--shadow-out);transition:background .35s ease}
+  .switcher .lbl{font-family:'Fraunces',serif;font-style:italic;font-size:14px;color:var(--ink-soft);margin-right:4px}
+  .swatches{display:flex;gap:8px;flex-wrap:wrap}
+  .sw{width:34px;height:34px;border-radius:14px;border:0;cursor:pointer;box-shadow:var(--shadow-out);position:relative;transition:transform .15s ease}
+  .sw:hover{transform:translateY(-1px)}
+  .sw.active::after{content:"";position:absolute;inset:-4px;border:2px solid var(--ink);border-radius:18px;pointer-events:none}
+  .sw[data-set="pesca"]{background:linear-gradient(135deg,#FFF1E6,#FFB39E)}
+  .sw[data-set="rosa"]{background:linear-gradient(135deg,#FFE4EC,#F4A6C0)}
+  .sw[data-set="blu"]{background:linear-gradient(135deg,#E3EEFB,#80BFE3)}
+  .sw[data-set="verde"]{background:linear-gradient(135deg,#E4F4E8,#7FD3AE)}
+  .sw[data-set="giallo"]{background:linear-gradient(135deg,#FFF6D6,#FFD16B)}
+  .sw[data-set="scuro"]{background:linear-gradient(135deg,#3A332F,#1F1B1A)}
+
+  .frame{max-width:440px;margin:14px auto;background:linear-gradient(160deg,var(--bg) 0%,var(--bg2) 100%);border-radius:36px;padding:18px 16px 100px;box-shadow:var(--shadow-out);position:relative;transition:background .35s ease}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .logo{width:46px;height:46px;border-radius:18px;background:linear-gradient(135deg,var(--peach),var(--pink));box-shadow:var(--shadow-out);display:grid;place-items:center;font-size:24px;color:var(--candy-ink)}
+  .brand h1{margin:0;font-family:'Fraunces',serif;font-weight:700;font-size:22px;letter-spacing:-.01em}
+  .brand .sub{margin:0;font-size:12px;color:var(--ink-soft);font-weight:500}
+  .avatar{width:46px;height:46px;border-radius:18px;background:linear-gradient(135deg,var(--lilac),var(--sky));box-shadow:var(--shadow-out);display:grid;place-items:center;font-weight:800;font-size:15px;color:var(--candy-ink)}
+  .hello{padding:6px 4px 14px}
+  .hello h2{margin:0;font-family:'Fraunces',serif;font-size:28px;font-weight:700;letter-spacing:-.01em;line-height:1.1}
+  .hello p{margin:6px 0 0;color:var(--ink-soft);font-size:14px}
+  .hero{border-radius:28px;background:linear-gradient(150deg,var(--lilac),var(--sky));padding:18px 18px 16px;box-shadow:var(--shadow-out);position:relative;overflow:hidden;margin-bottom:18px;color:var(--candy-ink)}
+  .hero::before{content:"";position:absolute;width:140px;height:140px;background:rgba(255,255,255,.35);border-radius:50%;top:-40px;right:-40px}
+  .hero::after{content:"";position:absolute;width:90px;height:90px;background:rgba(255,255,255,.25);border-radius:50%;bottom:-30px;left:-20px}
+  .hero .label{font-size:12px;font-weight:700;color:var(--candy-ink);opacity:.8;text-transform:uppercase;letter-spacing:.08em;position:relative}
+  .hero .num{font-family:'Fraunces',serif;font-size:42px;font-weight:700;line-height:1;margin-top:6px;position:relative;color:var(--candy-ink)}
+  .hero .num small{font-size:14px;font-weight:500;color:rgba(59,44,42,.7)}
+  .hero .meta{display:flex;gap:10px;margin-top:14px;position:relative;flex-wrap:wrap}
+  .chip{background:rgba(255,255,255,.7);backdrop-filter:blur(6px);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;color:var(--candy-ink)}
+  .chip .dot{width:8px;height:8px;border-radius:50%;background:var(--peach)}
+  .urg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+  .urg{border-radius:22px;padding:14px 12px;text-align:center;box-shadow:var(--shadow-out);background:var(--surface);color:var(--ink)}
+  .urg .n{font-family:'Fraunces',serif;font-size:30px;font-weight:700;line-height:1}
+  .urg .l{font-size:11px;font-weight:600;color:var(--ink-soft);margin-top:4px}
+  .urg.red{background:linear-gradient(150deg,#FFB39E,#FF8E76);color:#fff}
+  .urg.red .l{color:#fff;opacity:.95}
+  .urg.yellow{background:linear-gradient(150deg,#FFE89E,#FFD16B);color:var(--candy-ink)}
+  .urg.yellow .l{color:var(--candy-ink);opacity:.75}
+  .urg.green{background:linear-gradient(150deg,#A6E3C7,#7FD3AE);color:var(--candy-ink)}
+  .urg.green .l{color:var(--candy-ink);opacity:.75}
+  .section-title{display:flex;align-items:center;justify-content:space-between;padding:0 4px;margin:8px 0 12px}
+  .section-title h3{margin:0;font-family:'Fraunces',serif;font-size:20px;font-weight:700}
+  .section-title a{font-size:12px;color:var(--ink-soft);font-weight:600;text-decoration:none;background:var(--surface);padding:6px 10px;border-radius:999px;box-shadow:var(--shadow-out)}
+  .stack{display:flex;flex-direction:column;gap:12px}
+  .card{background:var(--surface);border-radius:24px;padding:14px;box-shadow:var(--shadow-out);display:flex;align-items:center;gap:12px;position:relative;color:var(--ink)}
+  .card .ico{width:54px;height:54px;border-radius:18px;display:grid;place-items:center;font-size:26px;flex-shrink:0;box-shadow:var(--shadow-in);color:var(--candy-ink)}
+  .ico.peach{background:linear-gradient(150deg,var(--peach),#FF9C82)}
+  .ico.lemon{background:linear-gradient(150deg,var(--lemon),#FFD16B)}
+  .ico.lilac{background:linear-gradient(150deg,var(--lilac),#B8A0E0)}
+  .ico.mint{background:linear-gradient(150deg,var(--mint),#7FD3AE)}
+  .ico.sky{background:linear-gradient(150deg,var(--sky),#80BFE3)}
+  .ico.pink{background:linear-gradient(150deg,var(--pink),#F2A6C0)}
+  .card .info{flex:1;min-width:0}
+  .card .cat{font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em}
+  .card .ttl{font-weight:700;font-size:15px;margin-top:2px;line-height:1.2}
+  .card .who{font-size:12px;color:var(--ink-soft);margin-top:2px}
+  .card .right{text-align:right;flex-shrink:0}
+  .card .when{font-size:11px;color:var(--ink-soft);font-weight:600}
+  .card .price{font-family:'Fraunces',serif;font-weight:700;font-size:18px;color:var(--ink)}
+  .card .badge{display:inline-block;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;background:linear-gradient(150deg,var(--peach),#FF8E76);color:#fff;margin-top:4px}
+  .card .badge.y{background:linear-gradient(150deg,var(--lemon),#FFD16B);color:var(--candy-ink)}
+  .card .badge.g{background:linear-gradient(150deg,var(--mint),#7FD3AE);color:var(--candy-ink)}
+  .subs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .sub{border-radius:22px;padding:14px;box-shadow:var(--shadow-out);background:var(--surface);color:var(--ink)}
+  .sub .name{font-weight:700}
+  .sub .price{font-family:'Fraunces',serif;font-weight:700;font-size:20px;margin-top:4px}
+  .sub .day{font-size:11px;color:var(--ink-soft);margin-top:2px;font-weight:600}
+  .sub.netflix{background:linear-gradient(150deg,var(--peach),#FF8E76);color:#fff}
+  .sub.netflix .day{color:rgba(255,255,255,.85)}
+  .sub.spotify{background:linear-gradient(150deg,var(--mint),#7FD3AE);color:var(--candy-ink)}
+  .sub.spotify .day{color:rgba(59,44,42,.75)}
+  .sub.sky{background:linear-gradient(150deg,var(--sky),#80BFE3);color:var(--candy-ink)}
+  .sub.sky .day{color:rgba(59,44,42,.75)}
+  .sub.tim{background:linear-gradient(150deg,var(--lemon),#FFD16B);color:var(--candy-ink)}
+  .sub.tim .day{color:rgba(59,44,42,.75)}
+  .nav{position:absolute;left:16px;right:16px;bottom:14px;background:var(--surface);border-radius:28px;padding:10px 8px;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;box-shadow:var(--shadow-out)}
+  .nav button{border:0;background:transparent;font-family:inherit;font-size:10px;font-weight:600;color:var(--ink-soft);display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;cursor:pointer;border-radius:18px}
+  .nav .ico-n{width:32px;height:32px;border-radius:14px;display:grid;place-items:center;font-size:16px}
+  .nav .active{color:var(--ink)}
+  .nav .active .ico-n{background:linear-gradient(150deg,var(--peach),var(--pink));box-shadow:var(--shadow-in);color:var(--candy-ink)}
+  .style-banner{max-width:440px;margin:0 auto 12px;text-align:center;font-family:'Fraunces',serif;font-style:italic;font-size:18px;color:var(--ink-soft)}
+</style>
+</head>
+<body data-theme="pesca">
+  <div class="style-banner">Stile 2 · Caramelle / Claymorphism</div>
+
+  <div class="switcher" role="radiogroup" aria-label="Scegli tema">
+    <span class="lbl">tema</span>
+    <div class="swatches">
+      <button class="sw active" data-set="pesca" aria-label="Pesca" title="Pesca"></button>
+      <button class="sw" data-set="rosa" aria-label="Rosa" title="Rosa"></button>
+      <button class="sw" data-set="blu" aria-label="Blu" title="Blu"></button>
+      <button class="sw" data-set="verde" aria-label="Verde" title="Verde"></button>
+      <button class="sw" data-set="giallo" aria-label="Giallo" title="Giallo"></button>
+      <button class="sw" data-set="scuro" aria-label="Scuro" title="Scuro"></button>
+    </div>
+  </div>
+
+  <div class="frame">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">🏡</div>
+        <div>
+          <h1>FamilyHub</h1>
+          <p class="sub">famiglia Rossi · 4 membri</p>
+        </div>
+      </div>
+      <div class="avatar">SR</div>
+    </div>
+
+    <div class="hello">
+      <h2>Buongiorno, Stefano</h2>
+      <p>4 cose da tenere d’occhio nei prossimi 60 giorni</p>
+    </div>
+
+    <div class="hero">
+      <div class="label">Abbonamenti · Maggio</div>
+      <div class="num">€ 87,40 <small>/mese</small></div>
+      <div class="meta">
+        <span class="chip"><span class="dot"></span> 4 attivi</span>
+        <span class="chip">prossimo: Netflix · 12 mag</span>
+      </div>
+    </div>
+
+    <div class="urg-grid">
+      <div class="urg red"><div class="n">1</div><div class="l">entro 7 gg</div></div>
+      <div class="urg yellow"><div class="n">2</div><div class="l">entro 30 gg</div></div>
+      <div class="urg green"><div class="n">1</div><div class="l">entro 60 gg</div></div>
+    </div>
+
+    <div class="section-title"><h3>In arrivo</h3><a href="#">vedi tutto</a></div>
+
+    <div class="stack">
+      <div class="card">
+        <div class="ico peach">🚗</div>
+        <div class="info">
+          <div class="cat">Bollo auto</div>
+          <div class="ttl">Fiat Panda · EX123YZ</div>
+          <div class="who">intestato a · Mamma</div>
+        </div>
+        <div class="right">
+          <div class="when">tra 3 giorni</div>
+          <div class="price">€ 168</div>
+          <div class="badge">urgente</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ico lemon">🪪</div>
+        <div class="info">
+          <div class="cat">Patente B</div>
+          <div class="ttl">Stefano Rossi</div>
+          <div class="who">rinnovo medico</div>
+        </div>
+        <div class="right">
+          <div class="when">17 maggio</div>
+          <div class="badge y">tra 11 gg</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ico lilac">🏠</div>
+        <div class="info">
+          <div class="cat">IMU · acconto</div>
+          <div class="ttl">Casa via Mazzini 14</div>
+          <div class="who">prima rata</div>
+        </div>
+        <div class="right">
+          <div class="when">16 giugno</div>
+          <div class="price">€ 412</div>
+          <div class="badge y">tra 41 gg</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ico mint">🛠️</div>
+        <div class="info">
+          <div class="cat">Revisione auto</div>
+          <div class="ttl">Fiat Panda · EX123YZ</div>
+          <div class="who">prossimo controllo</div>
+        </div>
+        <div class="right">
+          <div class="when">22 giugno</div>
+          <div class="badge g">tra 47 gg</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:22px"><h3>Abbonamenti</h3><a href="#">gestisci</a></div>
+    <div class="subs">
+      <div class="sub netflix"><div class="name">Netflix</div><div class="price">€ 17,99</div><div class="day">addebito · 12 mag</div></div>
+      <div class="sub spotify"><div class="name">Spotify Family</div><div class="price">€ 17,99</div><div class="day">addebito · 18 mag</div></div>
+      <div class="sub sky"><div class="name">Sky TV</div><div class="price">€ 30,90</div><div class="day">addebito · 22 mag</div></div>
+      <div class="sub tim"><div class="name">TIM Mobile</div><div class="price">€ 9,99</div><div class="day">addebito · 28 mag</div></div>
+    </div>
+
+    <nav class="nav">
+      <button class="active"><div class="ico-n">🏠</div>Home</button>
+      <button><div class="ico-n">📅</div>Scadenze</button>
+      <button><div class="ico-n">💳</div>Abbon.</button>
+      <button><div class="ico-n">🎁</div>Buoni</button>
+      <button><div class="ico-n">👨‍👩‍👧</div>Famiglia</button>
+    </nav>
+  </div>
+
+  <script>
+    const body = document.body;
+    const swatches = document.querySelectorAll('.sw');
+    const saved = localStorage.getItem('fh-theme') || 'pesca';
+    setTheme(saved);
+    swatches.forEach(b => b.addEventListener('click', () => setTheme(b.dataset.set)));
+    function setTheme(name){
+      body.dataset.theme = name;
+      swatches.forEach(b => b.classList.toggle('active', b.dataset.set === name));
+      try { localStorage.setItem('fh-theme', name); } catch(e){}
+    }
+  </script>
+</body>
+</html>

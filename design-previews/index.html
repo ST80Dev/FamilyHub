@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FamilyHub · 3 anteprime grafiche</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Inter',system-ui,sans-serif;background:#f4f1ea;color:#1a1a1a}
+  header{padding:28px 24px 8px;max-width:1400px;margin:0 auto}
+  header h1{font-family:'DM Serif Display',serif;font-size:34px;margin:0 0 6px}
+  header p{margin:0;color:#555;font-size:15px}
+  .toolbar{padding:12px 24px;max-width:1400px;margin:0 auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .toolbar a{font-size:13px;color:#1a1a1a;text-decoration:none;border:1.5px solid #1a1a1a;padding:6px 12px;border-radius:999px;background:#fff;font-weight:600}
+  .toolbar a:hover{background:#1a1a1a;color:#fff}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:18px 24px 40px;max-width:1400px;margin:0 auto}
+  @media (max-width:1100px){.grid{grid-template-columns:1fr;gap:24px}}
+  .col{background:#fff;border-radius:18px;border:1.5px solid #1a1a1a;overflow:hidden;display:flex;flex-direction:column}
+  .col header{padding:14px 16px;background:#1a1a1a;color:#f4f1ea;border:0}
+  .col header h2{font-family:'DM Serif Display',serif;font-size:18px;margin:0}
+  .col header p{font-size:12px;opacity:.8;color:#f4f1ea}
+  .frame-wrap{flex:1;background:#e8e3d8;padding:0;min-height:900px}
+  iframe{width:100%;height:100%;min-height:900px;border:0;display:block}
+</style>
+</head>
+<body>
+  <header>
+    <h1>FamilyHub · 3 direzioni grafiche</h1>
+    <p>Confronta le 3 proposte fianco a fianco. Ogni anteprima è la stessa Dashboard con dati reali.</p>
+  </header>
+  <div class="toolbar">
+    <a href="1-postit-neobrutalism.html" target="_blank">Apri Stile 1 a tutto schermo ↗</a>
+    <a href="2-claymorphism-caramelle.html" target="_blank">Apri Stile 2 a tutto schermo ↗</a>
+    <a href="3-editoriale-risograph.html" target="_blank">Apri Stile 3 a tutto schermo ↗</a>
+  </div>
+  <div class="grid">
+    <div class="col">
+      <header>
+        <h2>1 · Post-it / Neobrutalism</h2>
+        <p>cream + accenti vivaci, bordi neri, font manoscritto come tocco bizzarro</p>
+      </header>
+      <div class="frame-wrap"><iframe src="1-postit-neobrutalism.html" loading="lazy"></iframe></div>
+    </div>
+    <div class="col">
+      <header>
+        <h2>2 · Caramelle / Claymorphism</h2>
+        <p>pastelli puffy, ombre morbide, emoji come icone, vibe amichevole</p>
+      </header>
+      <div class="frame-wrap"><iframe src="2-claymorphism-caramelle.html" loading="lazy"></iframe></div>
+    </div>
+    <div class="col">
+      <header>
+        <h2>3 · Editoriale Risograph</h2>
+        <p>terracotta + oliva + crema, serif display, vibe rivista anni 70</p>
+      </header>
+      <div class="frame-wrap"><iframe src="3-editoriale-risograph.html" loading="lazy"></iframe></div>
+    </div>
+  </div>
+</body>
+</html>

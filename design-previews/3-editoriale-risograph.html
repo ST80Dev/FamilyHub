@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FamilyHub · Stile 3 · Editoriale Risograph</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#F4E9D8;
+    --cream-2:#EADBC2;
+    --terracotta:#C8553D;
+    --terracotta-2:#A8412C;
+    --olive:#7A8450;
+    --olive-2:#5E6A3C;
+    --navy:#1F3046;
+    --mustard:#E2A23B;
+    --rose:#E9A29B;
+    --teal:#2E7A75;
+    --ink:#1F1A14;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:var(--cream)}
+  body{
+    background-image:
+      radial-gradient(rgba(31,48,70,.10) 1px, transparent 1px),
+      radial-gradient(rgba(31,48,70,.06) 1px, transparent 1px);
+    background-size:14px 14px, 14px 14px;
+    background-position:0 0, 7px 7px;
+  }
+  .frame{max-width:440px;margin:24px auto;background:var(--cream);border:1.5px solid var(--ink);overflow:hidden;position:relative;box-shadow:0 12px 40px rgba(31,26,20,.12)}
+  .stripe{height:8px;display:flex}
+  .stripe span{flex:1}
+  .stripe .a{background:var(--terracotta)} .stripe .b{background:var(--mustard)} .stripe .c{background:var(--olive)} .stripe .d{background:var(--navy)} .stripe .e{background:var(--rose)}
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1.5px solid var(--ink);background:var(--cream)}
+  .brand{display:flex;align-items:baseline;gap:8px}
+  .brand .logo{font-family:'DM Serif Display',serif;font-size:26px;color:var(--terracotta);line-height:1}
+  .brand .logo i{font-style:italic;color:var(--olive)}
+  .brand .meta{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--olive-2)}
+  .av{width:40px;height:40px;border-radius:50%;background:var(--navy);color:var(--cream);display:grid;place-items:center;font-weight:700;font-size:14px;border:1.5px solid var(--ink)}
+  .masthead{padding:22px 18px 18px;border-bottom:1.5px solid var(--ink);background:var(--cream-2);position:relative;overflow:hidden}
+  .masthead::after{content:"";position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:var(--mustard);opacity:.6;z-index:0}
+  .masthead::before{content:"";position:absolute;right:30px;top:60px;width:60px;height:60px;border-radius:50%;background:var(--terracotta);opacity:.7;z-index:0}
+  .kicker{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--terracotta);position:relative}
+  .kicker::before{content:"◆";margin-right:6px;color:var(--olive)}
+  .masthead h1{font-family:'DM Serif Display',serif;font-size:36px;line-height:1;margin:6px 0 4px;letter-spacing:-.01em;position:relative;color:var(--ink)}
+  .masthead h1 i{font-style:italic;color:var(--terracotta)}
+  .masthead p{margin:0;font-size:13px;color:var(--olive-2);position:relative;max-width:80%}
+  .summary{display:grid;grid-template-columns:1.4fr 1fr 1fr;border-bottom:1.5px solid var(--ink);background:var(--cream)}
+  .summary > div{padding:14px 12px;border-right:1.5px solid var(--ink)}
+  .summary > div:last-child{border-right:0}
+  .summary .lbl{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--olive-2)}
+  .summary .val{font-family:'DM Serif Display',serif;font-size:24px;line-height:1;margin-top:4px;color:var(--ink)}
+  .summary .val small{font-family:'Inter',sans-serif;font-size:11px;font-weight:600;color:var(--olive-2);margin-left:4px}
+  .summary .hint{font-size:11px;color:var(--ink);margin-top:4px}
+  .pad{padding:18px}
+  .section-title{display:flex;align-items:baseline;justify-content:space-between;border-bottom:1.5px solid var(--ink);padding-bottom:6px;margin-bottom:14px}
+  .section-title h3{margin:0;font-family:'DM Serif Display',serif;font-size:22px;letter-spacing:-.01em}
+  .section-title h3 i{color:var(--terracotta);font-style:italic}
+  .section-title .num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--olive-2);letter-spacing:.1em}
+  .article{display:flex;gap:14px;padding:14px 0;border-bottom:1px dashed var(--ink)}
+  .article:last-child{border-bottom:0}
+  .article .index{font-family:'DM Serif Display',serif;font-size:30px;line-height:1;color:var(--terracotta);width:36px;flex-shrink:0;font-style:italic}
+  .article .body{flex:1;min-width:0}
+  .article .cat{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--olive)}
+  .article .cat.urgent{color:var(--terracotta)}
+  .article .ttl{font-family:'DM Serif Display',serif;font-size:18px;line-height:1.15;margin:2px 0 2px;color:var(--ink)}
+  .article .who{font-size:12px;color:var(--olive-2)}
+  .article .right{flex-shrink:0;text-align:right}
+  .article .when{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink);background:var(--mustard);padding:3px 8px;display:inline-block;border:1.5px solid var(--ink)}
+  .article .when.red{background:var(--terracotta);color:var(--cream)}
+  .article .when.green{background:var(--olive);color:var(--cream)}
+  .article .price{font-family:'DM Serif Display',serif;font-size:20px;margin-top:6px;color:var(--ink)}
+  .subs-block{background:var(--navy);color:var(--cream);padding:18px;border-top:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);position:relative;overflow:hidden}
+  .subs-block::before{content:"";position:absolute;left:-20px;bottom:-20px;width:90px;height:90px;border-radius:50%;background:var(--rose);opacity:.6}
+  .subs-block .head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px dashed rgba(244,233,216,.4);padding-bottom:8px;margin-bottom:12px;position:relative}
+  .subs-block .head h3{margin:0;font-family:'DM Serif Display',serif;font-size:22px}
+  .subs-block .head h3 i{color:var(--mustard);font-style:italic}
+  .subs-block .head .total{font-family:'DM Serif Display',serif;font-size:24px;color:var(--mustard)}
+  .subs{display:grid;grid-template-columns:1fr 1fr;gap:1.5px;background:var(--cream);border:1.5px solid var(--cream);position:relative}
+  .sub{background:var(--cream);color:var(--ink);padding:12px}
+  .sub .name{font-family:'DM Serif Display',serif;font-size:18px;line-height:1}
+  .sub .price{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;margin-top:4px;color:var(--terracotta)}
+  .sub .day{font-size:11px;color:var(--olive-2);margin-top:2px}
+  .sub.alt{background:var(--mustard)}
+  .sub.alt .price{color:var(--terracotta-2)}
+  .sub.alt2{background:var(--rose)}
+  .sub.alt3{background:var(--olive);color:var(--cream)}
+  .sub.alt3 .price{color:var(--cream)}
+  .sub.alt3 .day{color:rgba(244,233,216,.8)}
+  .nav{display:grid;grid-template-columns:repeat(5,1fr);background:var(--cream);border-top:1.5px solid var(--ink)}
+  .nav button{background:transparent;border:0;border-right:1.5px solid var(--ink);padding:12px 4px 14px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--olive-2);display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
+  .nav button:last-child{border-right:0}
+  .nav .ico{font-size:20px;filter:saturate(.85)}
+  .nav .active{background:var(--terracotta);color:var(--cream)}
+  .nav .active .ico{color:var(--cream)}
+  .footer-stripe{background:var(--cream);text-align:center;padding:8px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--olive-2);border-top:1.5px solid var(--ink)}
+  .style-banner{max-width:440px;margin:0 auto 12px;text-align:center;font-family:'DM Serif Display',serif;font-style:italic;font-size:20px;color:var(--olive-2)}
+</style>
+</head>
+<body>
+  <div class="style-banner">Stile 3 · Editoriale Risograph</div>
+  <div class="frame">
+    <div class="stripe"><span class="a"></span><span class="b"></span><span class="c"></span><span class="d"></span><span class="e"></span></div>
+
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">Family<i>Hub</i></div>
+        <div class="meta">N.18 · Mag · 2026</div>
+      </div>
+      <div class="av">SR</div>
+    </div>
+
+    <div class="masthead">
+      <div class="kicker">Promemoria della settimana</div>
+      <h1>Buongiorno, <i>Stefano</i></h1>
+      <p>4 scadenze nei prossimi 60 giorni · 4 abbonamenti attivi a maggio</p>
+    </div>
+
+    <div class="summary">
+      <div>
+        <div class="lbl">Abbonamenti · maggio</div>
+        <div class="val">€ 87,40<small>/mese</small></div>
+        <div class="hint">prossimo · Netflix 12 mag</div>
+      </div>
+      <div>
+        <div class="lbl">Urgenti</div>
+        <div class="val" style="color:var(--terracotta)">1</div>
+        <div class="hint">entro 7 giorni</div>
+      </div>
+      <div>
+        <div class="lbl">In arrivo</div>
+        <div class="val" style="color:var(--olive)">3</div>
+        <div class="hint">entro 60 giorni</div>
+      </div>
+    </div>
+
+    <div class="pad">
+      <div class="section-title">
+        <h3>In <i>scadenza</i></h3>
+        <span class="num">04 / VOCI</span>
+      </div>
+
+      <div class="article">
+        <div class="index">01</div>
+        <div class="body">
+          <div class="cat urgent">Bollo auto · veicolo</div>
+          <div class="ttl">Fiat Panda <i>EX 123 YZ</i></div>
+          <div class="who">intestatario · Mamma</div>
+        </div>
+        <div class="right">
+          <div class="when red">tra 3 gg</div>
+          <div class="price">€ 168</div>
+        </div>
+      </div>
+
+      <div class="article">
+        <div class="index">02</div>
+        <div class="body">
+          <div class="cat">Patente · documento</div>
+          <div class="ttl">Rinnovo <i>Patente B</i></div>
+          <div class="who">Stefano Rossi · medico convenzionato</div>
+        </div>
+        <div class="right">
+          <div class="when">17 mag</div>
+        </div>
+      </div>
+
+      <div class="article">
+        <div class="index">03</div>
+        <div class="body">
+          <div class="cat">Imposta · casa</div>
+          <div class="ttl">IMU <i>acconto</i></div>
+          <div class="who">via Mazzini 14 · prima rata</div>
+        </div>
+        <div class="right">
+          <div class="when">16 giu</div>
+          <div class="price">€ 412</div>
+        </div>
+      </div>
+
+      <div class="article">
+        <div class="index">04</div>
+        <div class="body">
+          <div class="cat">Revisione · veicolo</div>
+          <div class="ttl">Revisione <i>periodica</i></div>
+          <div class="who">Fiat Panda · officina centrale</div>
+        </div>
+        <div class="right">
+          <div class="when green">22 giu</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="subs-block">
+      <div class="head">
+        <h3>Abbon<i>amenti</i></h3>
+        <div class="total">€ 87,40</div>
+      </div>
+      <div class="subs">
+        <div class="sub"><div class="name">Netflix</div><div class="price">€ 17,99</div><div class="day">12 mag</div></div>
+        <div class="sub alt"><div class="name">Spotify</div><div class="price">€ 17,99</div><div class="day">18 mag</div></div>
+        <div class="sub alt2"><div class="name">Sky TV</div><div class="price">€ 30,90</div><div class="day">22 mag</div></div>
+        <div class="sub alt3"><div class="name">TIM Mobile</div><div class="price">€ 9,99</div><div class="day">28 mag</div></div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <button class="active"><div class="ico">🏠</div>Home</button>
+      <button><div class="ico">📅</div>Scad.</button>
+      <button><div class="ico">💳</div>Abbon.</button>
+      <button><div class="ico">🎁</div>Buoni</button>
+      <button><div class="ico">👨‍👩‍👧</div>Fam.</button>
+    </nav>
+
+    <div class="footer-stripe">FamilyHub · ed. famiglia · stampato con cura</div>
+    <div class="stripe"><span class="d"></span><span class="c"></span><span class="b"></span><span class="a"></span><span class="e"></span></div>
+  </div>
+</body>
+</html>
