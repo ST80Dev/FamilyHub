@@ -9,7 +9,9 @@ import {
   SUBSCRIPTION_META,
 } from '../../lib/subscriptionMeta'
 import { paymentMethodLabel } from '../../lib/paymentMethodMeta'
+import { personAvatar } from '../../lib/personMeta'
 import { usePaymentMethods } from '../../hooks/usePaymentMethods'
+import { usePersons } from '../../hooks/usePersons'
 import type { RecordScope } from '../../lib/ownership'
 import type {
   BillingCycle,
@@ -47,6 +49,7 @@ interface FormState {
   reminder_days_before: string
   notes: string
   payment_method_id: string
+  person_id: string
 }
 
 function initialState(s?: Subscription | null): FormState {
@@ -63,6 +66,7 @@ function initialState(s?: Subscription | null): FormState {
     reminder_days_before: String(s?.reminder_days_before ?? 3),
     notes: s?.notes ?? '',
     payment_method_id: s?.payment_method_id ?? '',
+    person_id: s?.person_id ?? '',
   }
 }
 
@@ -106,7 +110,11 @@ function SubscriptionFormBody({
   const [state, setState] = useState<FormState>(() => initialState(initial))
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [notesExpanded, setNotesExpanded] = useState(() =>
+    Boolean(initial?.notes),
+  )
   const { paymentMethods } = usePaymentMethods()
+  const { persons } = usePersons()
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -126,6 +134,7 @@ function SubscriptionFormBody({
         reminder_days_before: Number(state.reminder_days_before) || 3,
         notes: state.notes.trim() || null,
         payment_method_id: state.payment_method_id || null,
+        person_id: state.person_id || null,
       }
 
       const query = initial
@@ -163,6 +172,30 @@ function SubscriptionFormBody({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
+      <Field
+        label="Per chi?"
+        hint={
+          persons.length === 0
+            ? 'Aggiungi i componenti del nucleo dalle Impostazioni'
+            : 'Predefinito: tutta la famiglia'
+        }
+      >
+        <Select
+          value={state.person_id}
+          onChange={(e) =>
+            setState((s) => ({ ...s, person_id: e.target.value }))
+          }
+        >
+          <option value="">👪 Generale / tutta la famiglia</option>
+          {persons.map((p) => (
+            <option key={p.id} value={p.id}>
+              {personAvatar(p)} {p.display_name}
+              {p.kind === 'pet' && p.species ? ` (${p.species})` : ''}
+            </option>
+          ))}
+        </Select>
+      </Field>
+
       <Field label="Nome" hint="Es. Netflix Standard, Spotify Family">
         <Input
           required
@@ -316,14 +349,33 @@ function SubscriptionFormBody({
         </Select>
       </Field>
 
-      <Field label="Note">
-        <Textarea
-          rows={2}
-          maxLength={500}
-          value={state.notes}
-          onChange={(e) => setState((s) => ({ ...s, notes: e.target.value }))}
-        />
-      </Field>
+      <div className="block">
+        <button
+          type="button"
+          onClick={() => setNotesExpanded((v) => !v)}
+          className="flex w-full items-center justify-between text-xs font-semibold uppercase tracking-wider text-ink-soft hover:text-ink"
+        >
+          <span>
+            Note
+            {!notesExpanded && state.notes
+              ? ` · ${state.notes.length} caratteri`
+              : ''}
+          </span>
+          <span aria-hidden className="text-base leading-none">
+            {notesExpanded ? '−' : '+'}
+          </span>
+        </button>
+        {notesExpanded && (
+          <Textarea
+            className="mt-1.5"
+            rows={2}
+            maxLength={500}
+            value={state.notes}
+            onChange={(e) => setState((s) => ({ ...s, notes: e.target.value }))}
+            autoFocus
+          />
+        )}
+      </div>
 
       {error && (
         <div className="rounded-2xl bg-[color:var(--candy-peach)]/30 px-3 py-2 text-sm text-[color:var(--candy-ink)]">

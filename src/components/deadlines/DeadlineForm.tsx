@@ -78,6 +78,9 @@ function DeadlineFormBody({ scope, initial, onClose, onSaved }: BodyProps) {
   const [state, setState] = useState<FormState>(() => initialState(initial))
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [notesExpanded, setNotesExpanded] = useState(() =>
+    Boolean(initial?.notes),
+  )
   const { persons } = usePersons()
   const { paymentMethods } = usePaymentMethods()
 
@@ -255,14 +258,35 @@ function DeadlineFormBody({ scope, initial, onClose, onSaved }: BodyProps) {
           </Select>
         </Field>
 
-        <Field label="Note">
-          <Textarea
-            value={state.notes}
-            onChange={(e) => setState((s) => ({ ...s, notes: e.target.value }))}
-            maxLength={500}
-            rows={2}
-          />
-        </Field>
+        <div className="block">
+          <button
+            type="button"
+            onClick={() => setNotesExpanded((v) => !v)}
+            className="flex w-full items-center justify-between text-xs font-semibold uppercase tracking-wider text-ink-soft hover:text-ink"
+          >
+            <span>
+              Note
+              {!notesExpanded && state.notes
+                ? ` · ${state.notes.length} caratteri`
+                : ''}
+            </span>
+            <span aria-hidden className="text-base leading-none">
+              {notesExpanded ? '−' : '+'}
+            </span>
+          </button>
+          {notesExpanded && (
+            <Textarea
+              className="mt-1.5"
+              value={state.notes}
+              onChange={(e) =>
+                setState((s) => ({ ...s, notes: e.target.value }))
+              }
+              maxLength={500}
+              rows={2}
+              autoFocus
+            />
+          )}
+        </div>
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Promemoria (giorni prima)">
