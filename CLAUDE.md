@@ -12,7 +12,8 @@ dimenticanza.
 - **PWA**: `vite-plugin-pwa` con Workbox (service worker, offline cache,
   notifiche push)
 - **Routing**: `react-router-dom` v7
-- **Deploy**: VPS OVH (da configurare)
+- **Deploy**: Vercel (frontend) + Supabase Cloud EU (backend) — vedi sezione
+  "Deploy & infrastruttura" in fondo
 - **Package manager**: npm
 
 ## Setup
@@ -166,8 +167,11 @@ corrente.
 - Valuta `€` formato italiano (`Intl.NumberFormat('it-IT')`)
 - Mobile-first, bottom nav su mobile, sidebar su desktop
 - Tema chiaro di default, dark mode supportata via `dark:` Tailwind
-- Onboarding guidato: crea famiglia → aggiungi persone/veicoli → il sistema
-  suggerisce le scadenze da inserire
+- Onboarding non bloccante: l'utente può usare l'app anche senza creare/unirsi
+  a una famiglia. La gestione del nucleo (creazione, invito, join via codice)
+  vive nella pagina `/famiglia` ed è raggiungibile in qualsiasi momento. La
+  Dashboard mostra una CTA "Configura nucleo" finché non c'è una famiglia
+  associata all'utente.
 
 ## Convenzioni di sviluppo
 
@@ -183,3 +187,72 @@ corrente.
   `is_family_member(family_id)`
 - I componenti UI per categoria stanno in `src/components/<categoria>/`,
   le pagine in `src/pages/`
+
+## Workflow git e branching
+
+- **All'inizio di ogni nuova attività**, prima di toccare il codice:
+  `git fetch origin --prune && git log origin/main --oneline -10` per vedere
+  lo stato reale di `main` sul remoto.
+- **Verificare se eventuali branch precedenti sono stati mergiati su `main`**
+  (non su altri branch intermedi). Controllare i merge commit puntando a
+  `origin/main`, non a branch ereditati.
+- **Creare nuovi branch sempre da `origin/main` aggiornato**, mai da un
+  branch ereditato dalla sessione precedente. Pattern:
+  `git checkout -B <nuovo-branch> origin/main`.
+- **Quando si apre una PR**: il target deve essere `main`. Verificare
+  esplicitamente nel form PR e nella descrizione che la base sia `main` e
+  non un altro branch di lavoro.
+- **Dopo il merge**: il deploy di produzione su Vercel parte da `main`. Se
+  una PR viene mergiata su un branch diverso, la produzione non si aggiorna
+  e Claude/sviluppatore devono accorgersene controllando `origin/main`.
+
+## Deploy & infrastruttura
+
+### Setup attuale (fase familiare / sviluppo)
+
+- **Frontend**: Vercel, account `st80dev`, progetto collegato al repo
+  `ST80Dev/FamilyHub`. Auto-detect Vite, niente config nel repo oltre a
+  `vercel.json` (SPA rewrite per il routing client-side della PWA).
+  - Production URL: `https://family-hub-tan-xi.vercel.app`
+  - Preview deploy automatici per ogni branch: `https://*-st80dev.vercel.app`
+  - Env vars su dashboard Vercel: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+- **Backend**: Supabase Cloud, progetto `nsrjhhwtfkcnkwgtffpm` (region
+  `eu-west-1`). Auth, DB, Realtime, Storage gestiti.
+- **Auth Configuration** (Supabase Dashboard → Authentication → URL Configuration):
+  - Site URL: `https://family-hub-tan-xi.vercel.app`
+  - Redirect URLs: `https://family-hub-tan-xi.vercel.app/**`,
+    `https://*-st80dev.vercel.app/**` (per i preview deploy)
+- **Dominio custom**: nessuno per ora. L'utente possiede `meteonow.app` ma
+  non è coerente col progetto. Quando il branding sarà definitivo si comprerà
+  un dominio dedicato; fino ad allora si usa la URL Vercel.
+
+### Strategia di hosting (3 fasi)
+
+| Fase | Frontend | Backend | Trigger di passaggio |
+|---|---|---|---|
+| **1 — Famiglia / sviluppo** (ora) | Vercel | Supabase Cloud EU | — |
+| **2 — Famiglia + AI pesante** | Vercel | Supabase self-hosted su VPS OVH | Gmail OAuth full, uscita dal free tier, sovranità dati richiesta |
+| **3 — Pubblicazione** | Vercel (o VPS) | Cloud per scalare, o self-hosted | Decisione di prodotto |
+
+Lo stesso codebase serve tutte le fasi: cambia solo dove punta
+`VITE_SUPABASE_URL`. Le migration in `supabase/migrations/` funzionano identiche
+su Cloud e self-hosted.
+
+### Regole per non pagare la migrazione futura
+
+- Schema sempre via migration file in `supabase/migrations/`, mai modifiche
+  manuali dal dashboard Cloud.
+- Niente feature Cloud-only non versionate (pg_cron, Vault, scheduled functions
+  vanno tutte in migration o `supabase/functions/`).
+- Backup di sicurezza periodico (`supabase db dump` mensile) salvato fuori da
+  Supabase, indipendente dal PITR del piano.
+- Anon/service key sempre in env var, mai nel repo.
+
+### Nota privacy fase familiare
+
+Distribuzione attuale: solo familiari consapevoli, niente pubblicazione store.
+GDPR copre il trattamento sotto eccezione domestica (art. 2.2.c). Vercel serve
+solo asset statici e non vede dati personali. I dati personali transitano
+direttamente browser → Supabase EU. Quando si valuterà la pubblicazione, le
+feature più invasive (es. Gmail OAuth full) saranno riconsiderate o gateate
+dietro consenso esplicito.
