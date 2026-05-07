@@ -15,6 +15,10 @@ import {
   todayISO,
   urgencyBucket,
 } from '../lib/deadlineEngine'
+import {
+  cancellationStatus,
+  effectiveMonthlyAmount,
+} from '../lib/subscriptionForecast'
 import { formatCurrency, formatDate } from '../lib/format'
 import type { Subscription } from '../types'
 
@@ -31,16 +35,6 @@ const MONTH_NAMES = [
   'gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
   'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre',
 ]
-
-function monthlyAmount(s: Subscription): number {
-  const amount = Number(s.amount) || 0
-  switch (s.billing_cycle) {
-    case 'monthly': return amount
-    case 'quarterly': return amount / 3
-    case 'semiannual': return amount / 6
-    case 'annual': return amount / 12
-  }
-}
 
 function ensureNextBilling(s: Subscription): string | null {
   if (s.next_billing_date) {
@@ -95,10 +89,27 @@ export default function Dashboard() {
     return out
   }, [deadlines])
 
+  const today = todayISO()
   const monthTotal = useMemo(
-    () => subscriptions.reduce((acc, s) => acc + monthlyAmount(s), 0),
-    [subscriptions],
+    () => subscriptions.reduce((acc, s) => acc + effectiveMonthlyAmount(s, today), 0),
+    [subscriptions, today],
   )
+
+  const cancellationAlerts = useMemo(() => {
+    const items: { sub: Subscription; alertDate: string; daysToNotice: number }[] = []
+    for (const s of subscriptions) {
+      const c = cancellationStatus(s, today, 60)
+      if (c.kind === 'urgent' || c.kind === 'overdue_notice') {
+        items.push({
+          sub: s,
+          alertDate: c.noticeDate,
+          daysToNotice: c.kind === 'overdue_notice' ? -1 : c.daysToNotice,
+        })
+      }
+    }
+    items.sort((a, b) => a.daysToNotice - b.daysToNotice)
+    return items
+  }, [subscriptions, today])
 
   const nextSub = useMemo(() => {
     const today = todayISO()
@@ -240,6 +251,51 @@ export default function Dashboard() {
           ))}
         </div>
       </section>
+
+      {/* Disdette da gestire */}
+      {cancellationAlerts.length > 0 && (
+        <section className="mt-6">
+          <header className="flex items-center justify-between px-1">
+            <h2 className="font-display text-xl font-bold text-ink">
+              Da disdire
+            </h2>
+          </header>
+          <div className="mt-3 space-y-2">
+            {cancellationAlerts.map(({ sub, alertDate, daysToNotice }) => (
+              <Link key={sub.id} to="/abbonamenti" className="block">
+                <Card
+                  variant="surface"
+                  padding="sm"
+                  radius="lg"
+                  className="flex items-center justify-between gap-3"
+                >
+                  <div className="min-w-0">
+                    <div className="text-[15px] font-bold leading-tight text-ink">
+                      {sub.name}
+                    </div>
+                    <div className="mt-0.5 text-xs text-ink-soft">
+                      Disdici entro {formatDate(alertDate)}
+                      {sub.planned_end_date &&
+                        ` · stop ${formatDate(sub.planned_end_date)}`}
+                    </div>
+                  </div>
+                  <span
+                    className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                      daysToNotice < 0
+                        ? 'candy-red-grad text-white'
+                        : 'candy-lemon-grad text-[color:var(--candy-ink)]'
+                    }`}
+                  >
+                    {daysToNotice < 0
+                      ? 'subito'
+                      : `tra ${daysToNotice} gg`}
+                  </span>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Abbonamenti */}
       {subscriptions.length > 0 && (

@@ -5,6 +5,7 @@ import {
   monthlyEquivalent,
   subscriptionMeta,
 } from '../../lib/subscriptionMeta'
+import { cancellationStatus } from '../../lib/subscriptionForecast'
 import { formatCurrency, formatDate } from '../../lib/format'
 import { daysUntil, nextBillingDate } from '../../lib/deadlineEngine'
 import { personAvatar } from '../../lib/personMeta'
@@ -38,6 +39,7 @@ export function SubscriptionCard({ subscription, person, onClick }: Props) {
       : monthlyEquivalent(Number(subscription.amount) || 0, subscription.billing_cycle)
   const isPaused = subscription.status === 'paused'
   const isCancelled = subscription.status === 'cancelled'
+  const cancel = cancellationStatus(subscription)
 
   return (
     <Card
@@ -86,6 +88,25 @@ export function SubscriptionCard({ subscription, person, onClick }: Props) {
             </>
           )}
         </div>
+        {!isCancelled && cancel.kind !== 'none' && (
+          <div className="mt-1 text-[11px] font-medium text-ink-soft">
+            {cancel.kind === 'expired' && (
+              <>Stop previsto: {formatDate(cancel.end)}</>
+            )}
+            {cancel.kind === 'overdue_notice' && (
+              <>Disdici subito · stop {formatDate(cancel.end)}</>
+            )}
+            {cancel.kind === 'urgent' && (
+              <>
+                Disdici entro {formatDate(cancel.noticeDate)}
+                {' '}· stop {formatDate(cancel.end)}
+              </>
+            )}
+            {cancel.kind === 'pending' && (
+              <>Stop previsto: {formatDate(cancel.end)}</>
+            )}
+          </div>
+        )}
       </div>
       <div className="flex flex-shrink-0 flex-col items-end gap-1">
         {isPaused && (
@@ -107,6 +128,16 @@ export function SubscriptionCard({ subscription, person, onClick }: Props) {
               {whenLabel(next)}
             </Badge>
           </>
+        )}
+        {!isCancelled && cancel.kind === 'overdue_notice' && (
+          <Badge tone="red" size="sm">
+            disdici subito
+          </Badge>
+        )}
+        {!isCancelled && cancel.kind === 'urgent' && (
+          <Badge tone="yellow" size="sm">
+            disdetta in {cancel.daysToNotice} gg
+          </Badge>
         )}
       </div>
     </Card>
