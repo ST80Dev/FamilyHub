@@ -428,6 +428,7 @@ export type Database = {
           amount: number
           auto_renews: boolean
           billing_cycle: Database["public"]["Enums"]["billing_cycle"]
+          cancellation_notice_days: number | null
           category: Database["public"]["Enums"]["subscription_category"]
           created_at: string
           currency: string
@@ -439,6 +440,7 @@ export type Database = {
           owner_user_id: string | null
           payment_method_id: string | null
           person_id: string | null
+          planned_end_date: string | null
           provider: string | null
           reminder_days_before: number
           status: Database["public"]["Enums"]["subscription_status"]
@@ -448,6 +450,7 @@ export type Database = {
           amount?: number
           auto_renews?: boolean
           billing_cycle?: Database["public"]["Enums"]["billing_cycle"]
+          cancellation_notice_days?: number | null
           category?: Database["public"]["Enums"]["subscription_category"]
           created_at?: string
           currency?: string
@@ -459,6 +462,7 @@ export type Database = {
           owner_user_id?: string | null
           payment_method_id?: string | null
           person_id?: string | null
+          planned_end_date?: string | null
           provider?: string | null
           reminder_days_before?: number
           status?: Database["public"]["Enums"]["subscription_status"]
@@ -468,6 +472,7 @@ export type Database = {
           amount?: number
           auto_renews?: boolean
           billing_cycle?: Database["public"]["Enums"]["billing_cycle"]
+          cancellation_notice_days?: number | null
           category?: Database["public"]["Enums"]["subscription_category"]
           created_at?: string
           currency?: string
@@ -479,6 +484,7 @@ export type Database = {
           owner_user_id?: string | null
           payment_method_id?: string | null
           person_id?: string | null
+          planned_end_date?: string | null
           provider?: string | null
           reminder_days_before?: number
           status?: Database["public"]["Enums"]["subscription_status"]

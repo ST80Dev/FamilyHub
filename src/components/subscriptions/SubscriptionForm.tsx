@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Button, Field, Input, Modal, Select, Textarea } from '../ui'
 import { supabase } from '../../lib/supabase'
@@ -8,6 +8,12 @@ import {
   SUBSCRIPTION_CATEGORIES,
   SUBSCRIPTION_META,
 } from '../../lib/subscriptionMeta'
+import {
+  addMonthsISO,
+  cancellationNoticeDate,
+  lastDayOfMonthISO,
+} from '../../lib/subscriptionForecast'
+import { formatDate } from '../../lib/format'
 import { paymentMethodLabel } from '../../lib/paymentMethodMeta'
 import { personAvatar } from '../../lib/personMeta'
 import { usePaymentMethods } from '../../hooks/usePaymentMethods'
@@ -27,6 +33,18 @@ const STATUS_LABEL: Record<SubscriptionStatus, string> = {
   cancelled: 'Cancellato',
 }
 const CYCLES: BillingCycle[] = ['monthly', 'quarterly', 'semiannual', 'annual']
+
+type EndMode = 'none' | 'months' | 'month_year' | 'exact_date'
+const END_MODE_LABEL: Record<EndMode, string> = {
+  none: 'Nessuna — abbonamento a tempo indeterminato',
+  months: 'Tra N mesi',
+  month_year: 'Entro un mese/anno',
+  exact_date: 'Data esatta',
+}
+const MONTH_NAMES = [
+  'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+  'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre',
+]
 
 interface Props {
   open: boolean
@@ -50,9 +68,32 @@ interface FormState {
   notes: string
   payment_method_id: string
   person_id: string
+  end_mode: EndMode
+  end_months: string
+  end_month: string
+  end_year: string
+  end_date: string
+  notice_days: string
+}
+
+function todayParts(): { month: string; year: string } {
+  const d = new Date()
+  return { month: String(d.getMonth() + 1), year: String(d.getFullYear()) }
 }
 
 function initialState(s?: Subscription | null): FormState {
+  const today = todayParts()
+  let end_mode: EndMode = 'none'
+  let end_month = today.month
+  let end_year = today.year
+  let end_date = ''
+  if (s?.planned_end_date) {
+    end_mode = 'exact_date'
+    end_date = s.planned_end_date
+    const [y, m] = s.planned_end_date.split('-')
+    end_year = y ?? today.year
+    end_month = m ? String(Number(m)) : today.month
+  }
   return {
     name: s?.name ?? '',
     provider: s?.provider ?? '',
@@ -67,6 +108,36 @@ function initialState(s?: Subscription | null): FormState {
     notes: s?.notes ?? '',
     payment_method_id: s?.payment_method_id ?? '',
     person_id: s?.person_id ?? '',
+    end_mode,
+    end_months: '6',
+    end_month,
+    end_year,
+    end_date,
+    notice_days: s?.cancellation_notice_days != null
+      ? String(s.cancellation_notice_days)
+      : '',
+  }
+}
+
+/** Trasforma la modalità + input dell'utente in una data ISO (o null). */
+function resolvePlannedEnd(s: FormState): string | null {
+  switch (s.end_mode) {
+    case 'none':
+      return null
+    case 'months': {
+      const n = Number(s.end_months)
+      if (!Number.isFinite(n) || n <= 0) return null
+      return addMonthsISO(todayISO(), Math.round(n))
+    }
+    case 'month_year': {
+      const m = Number(s.end_month)
+      const y = Number(s.end_year)
+      if (!Number.isInteger(m) || m < 1 || m > 12) return null
+      if (!Number.isInteger(y) || y < 1900 || y > 9999) return null
+      return lastDayOfMonthISO(y, m - 1)
+    }
+    case 'exact_date':
+      return s.end_date || null
   }
 }
 
@@ -116,11 +187,28 @@ function SubscriptionFormBody({
   const { paymentMethods } = usePaymentMethods()
   const { persons } = usePersons()
 
+  const plannedEndPreview = useMemo(() => resolvePlannedEnd(state), [state])
+  const noticePreview = useMemo(() => {
+    if (!plannedEndPreview) return null
+    const notice = Number(state.notice_days) || 0
+    if (notice <= 0) return null
+    return cancellationNoticeDate({
+      planned_end_date: plannedEndPreview,
+      cancellation_notice_days: notice,
+    } as Subscription)
+  }, [plannedEndPreview, state.notice_days])
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
     setSubmitting(true)
     try {
+      const planned_end_date = resolvePlannedEnd(state)
+      const noticeRaw = state.notice_days.trim()
+      const cancellation_notice_days =
+        planned_end_date && noticeRaw !== ''
+          ? Math.max(0, Math.min(365, Number(noticeRaw) || 0))
+          : null
       const base = {
         name: state.name.trim(),
         provider: state.provider.trim() || null,
@@ -135,6 +223,8 @@ function SubscriptionFormBody({
         notes: state.notes.trim() || null,
         payment_method_id: state.payment_method_id || null,
         person_id: state.person_id || null,
+        planned_end_date,
+        cancellation_notice_days,
       }
 
       const query = initial
@@ -325,6 +415,122 @@ function SubscriptionFormBody({
         />
         Si rinnova automaticamente
       </label>
+
+      <div className="rounded-2xl bg-[color:var(--surface-2)]/60 p-3 space-y-3">
+        <Field
+          label="Disdetta pianificata"
+          hint="Per scorporare il costo dopo la fine prevista e ricordarti di disdire in tempo"
+        >
+          <Select
+            value={state.end_mode}
+            onChange={(e) =>
+              setState((s) => ({ ...s, end_mode: e.target.value as EndMode }))
+            }
+          >
+            {(['none', 'months', 'month_year', 'exact_date'] as EndMode[]).map(
+              (m) => (
+                <option key={m} value={m}>
+                  {END_MODE_LABEL[m]}
+                </option>
+              ),
+            )}
+          </Select>
+        </Field>
+
+        {state.end_mode === 'months' && (
+          <Field label="Tra quanti mesi">
+            <Input
+              type="number"
+              min={1}
+              max={120}
+              value={state.end_months}
+              onChange={(e) =>
+                setState((s) => ({ ...s, end_months: e.target.value }))
+              }
+            />
+          </Field>
+        )}
+
+        {state.end_mode === 'month_year' && (
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Mese">
+              <Select
+                value={state.end_month}
+                onChange={(e) =>
+                  setState((s) => ({ ...s, end_month: e.target.value }))
+                }
+              >
+                {MONTH_NAMES.map((name, idx) => (
+                  <option key={idx + 1} value={idx + 1}>
+                    {name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Anno">
+              <Input
+                type="number"
+                min={new Date().getFullYear()}
+                max={2100}
+                value={state.end_year}
+                onChange={(e) =>
+                  setState((s) => ({ ...s, end_year: e.target.value }))
+                }
+              />
+            </Field>
+          </div>
+        )}
+
+        {state.end_mode === 'exact_date' && (
+          <Field label="Data esatta di fine">
+            <Input
+              type="date"
+              value={state.end_date}
+              onChange={(e) =>
+                setState((s) => ({ ...s, end_date: e.target.value }))
+              }
+            />
+          </Field>
+        )}
+
+        {state.end_mode !== 'none' && (
+          <>
+            <Field
+              label="Giorni di preavviso obbligatori"
+              hint="Es. 30 se il contratto richiede un mese di preavviso. Lascia vuoto se non c'è preavviso."
+            >
+              <Input
+                type="number"
+                min={0}
+                max={365}
+                placeholder="0"
+                value={state.notice_days}
+                onChange={(e) =>
+                  setState((s) => ({ ...s, notice_days: e.target.value }))
+                }
+              />
+            </Field>
+            {plannedEndPreview && (
+              <div className="rounded-xl bg-[color:var(--surface)] px-3 py-2 text-xs text-ink-soft">
+                <div>
+                  Fine prevista:{' '}
+                  <strong className="text-ink">
+                    {formatDate(plannedEndPreview)}
+                  </strong>
+                </div>
+                {noticePreview && (
+                  <div className="mt-0.5">
+                    Avvisa di disdire entro:{' '}
+                    <strong className="text-ink">
+                      {formatDate(noticePreview)}
+                    </strong>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
       <Field
         label="Metodo di pagamento"

@@ -8,7 +8,8 @@ import { usePersons } from '../hooks/usePersons'
 import { useSubscriptions } from '../hooks/useSubscriptions'
 import { SubscriptionCard } from '../components/subscriptions/SubscriptionCard'
 import { SubscriptionForm } from '../components/subscriptions/SubscriptionForm'
-import { monthlyEquivalent } from '../lib/subscriptionMeta'
+import { effectiveMonthlyAmount } from '../lib/subscriptionForecast'
+import { todayISO } from '../lib/deadlineEngine'
 import { formatCurrency } from '../lib/format'
 import { recordOwnership } from '../lib/ownership'
 import type { Subscription } from '../types'
@@ -40,13 +41,10 @@ export default function Subscriptions() {
     return out
   }, [subscriptions])
 
+  const today = todayISO()
   const monthTotal = useMemo(
-    () =>
-      active.reduce(
-        (acc, s) => acc + monthlyEquivalent(Number(s.amount) || 0, s.billing_cycle),
-        0,
-      ),
-    [active],
+    () => active.reduce((acc, s) => acc + effectiveMonthlyAmount(s, today), 0),
+    [active, today],
   )
 
   const yearTotal = monthTotal * 12
