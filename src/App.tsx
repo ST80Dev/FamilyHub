@@ -4,8 +4,8 @@ import SignIn from './pages/SignIn'
 import Family from './pages/Family'
 import Deadlines from './pages/Deadlines'
 import Subscriptions from './pages/Subscriptions'
+import Vouchers from './pages/Vouchers'
 import Settings from './pages/Settings'
-import Placeholder from './pages/Placeholder'
 import { RequireAuth } from './components/RequireAuth'
 
 export default function App() {
@@ -41,11 +41,7 @@ export default function App() {
         path="/buoni"
         element={
           <RequireAuth>
-            <Placeholder
-              title="Buoni"
-              icon="🎁"
-              description="Buoni regalo, rimborsi, cashback e coupon: salvali qui prima che scadano."
-            />
+            <Vouchers />
           </RequireAuth>
         }
       />
