@@ -5,8 +5,10 @@ import { Button, Card, Chip } from '../components/ui'
 import { useFamily } from '../hooks/useFamily'
 import { useDeadlines } from '../hooks/useDeadlines'
 import { useSubscriptions } from '../hooks/useSubscriptions'
+import { useVouchers } from '../hooks/useVouchers'
 import { usePersons } from '../hooks/usePersons'
 import { DeadlineCard } from '../components/deadlines/DeadlineCard'
+import { VoucherCard } from '../components/vouchers/VoucherCard'
 import { WeeklyExpenses } from '../components/payment/WeeklyExpenses'
 import { useAuth } from '../hooks/useAuth'
 import {
@@ -57,6 +59,7 @@ export default function Dashboard() {
   const { family, membership, loading: famLoading } = useFamily()
   const { deadlines, loading: dlLoading } = useDeadlines()
   const { subscriptions: allSubs, loading: subLoading } = useSubscriptions()
+  const { vouchers, refresh: refreshVouchers } = useVouchers()
   const { persons } = usePersons()
   const personById = useMemo(
     () => new Map(persons.map((p) => [p.id, p])),
@@ -94,6 +97,22 @@ export default function Dashboard() {
     () => subscriptions.reduce((acc, s) => acc + effectiveMonthlyAmount(s, today), 0),
     [subscriptions, today],
   )
+
+  const expiringVouchers = useMemo(() => {
+    return vouchers
+      .filter((v) => {
+        if (v.status !== 'available') return false
+        if (!v.expiry_date) return false
+        const u = urgencyBucket(v.expiry_date)
+        return u !== 'later' && u !== 'overdue'
+      })
+      .sort((a, b) => {
+        if (!a.expiry_date) return 1
+        if (!b.expiry_date) return -1
+        return a.expiry_date.localeCompare(b.expiry_date)
+      })
+      .slice(0, 3)
+  }, [vouchers])
 
   const cancellationAlerts = useMemo(() => {
     const items: { sub: Subscription; alertDate: string; daysToNotice: number }[] = []
@@ -251,6 +270,33 @@ export default function Dashboard() {
           ))}
         </div>
       </section>
+
+      {/* Buoni in scadenza */}
+      {expiringVouchers.length > 0 && (
+        <section className="mt-6">
+          <header className="flex items-center justify-between px-1">
+            <h2 className="font-display text-xl font-bold text-ink">
+              Buoni in scadenza
+            </h2>
+            <Link
+              to="/buoni"
+              className="rounded-full bg-[color:var(--surface-2)] px-3 py-1.5 text-xs font-semibold text-ink-soft clay-sm hover:text-ink"
+            >
+              vedi tutto
+            </Link>
+          </header>
+          <div className="mt-3 space-y-3">
+            {expiringVouchers.map((v) => (
+              <VoucherCard
+                key={v.id}
+                voucher={v}
+                person={v.person_id ? personById.get(v.person_id) : null}
+                onChanged={refreshVouchers}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Disdette da gestire */}
       {cancellationAlerts.length > 0 && (
