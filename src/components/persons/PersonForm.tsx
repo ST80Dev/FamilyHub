@@ -127,7 +127,13 @@ function PersonFormBody({
 
       let activeFamily = family
       if (willCreateFamily) {
-        activeFamily = await createFamily(null, display_name)
+        // Solo se la persona che stiamo creando È l'utente stesso
+        // (selfBootstrap) il suo nome può fare anche da display_name in
+        // family_members. Altrimenti lasciamo il default (email): scrivere
+        // il nome di un altro componente come nome del membro creerebbe
+        // un profilo "intestato" alla persona sbagliata in topbar/dashboard.
+        const memberName = selfBootstrap ? display_name : null
+        activeFamily = await createFamily(null, memberName)
         onFamilyCreated?.()
       }
 

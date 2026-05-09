@@ -65,6 +65,10 @@ export default function Dashboard() {
     () => new Map(persons.map((p) => [p.id, p])),
     [persons],
   )
+  const selfPerson = useMemo(
+    () => persons.find((p) => p.linked_user_id === user?.id) ?? null,
+    [persons, user?.id],
+  )
   const subscriptions = useMemo(
     () => allSubs.filter((s) => s.status === 'active'),
     [allSubs],
@@ -141,7 +145,10 @@ export default function Dashboard() {
   }, [subscriptions])
 
   const greetName =
-    firstName(membership?.display_name) || firstName(user?.email) || 'ciao'
+    firstName(selfPerson?.display_name) ||
+    firstName(membership?.display_name) ||
+    firstName(user?.email) ||
+    'ciao'
   const monthLabel = MONTH_NAMES[new Date().getMonth()]
   const totalUpcoming = urgencyCounts.red + urgencyCounts.yellow + urgencyCounts.green
 

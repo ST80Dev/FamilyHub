@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { useFamily } from '../../hooks/useFamily'
+import { useSelfPerson } from '../../hooks/useSelfPerson'
 import { Avatar } from '../ui'
 
 export function Topbar() {
   const { user } = useAuth()
-  const { family, membership } = useFamily()
+  const { family } = useFamily()
+  const { person: selfPerson } = useSelfPerson()
 
   return (
     <header className="md:hidden flex items-center justify-between px-1 py-2">
@@ -23,7 +25,7 @@ export function Topbar() {
         </div>
       </Link>
       <Link to="/impostazioni" aria-label="Impostazioni">
-        <Avatar name={membership?.display_name} email={user?.email} size="md" />
+        <Avatar name={selfPerson?.display_name} email={user?.email} size="md" />
       </Link>
     </header>
   )
