@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { FormEvent } from 'react'
+import type { CSSProperties, FormEvent } from 'react'
 import { Button, Field, Input, Modal, Select, Textarea } from '../ui'
 import { supabase } from '../../lib/supabase'
 import { VOUCHER_META, VOUCHER_STATUS_LABEL, VOUCHER_TYPES } from '../../lib/voucherMeta'
@@ -136,7 +136,7 @@ function VoucherFormBody({ scope, initial, onClose, onSaved }: BodyProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
+    <form onSubmit={handleSubmit} className="space-y-3" autoComplete="off">
       <Field
         label="Per chi?"
         hint={
@@ -196,6 +196,10 @@ function VoucherFormBody({ scope, initial, onClose, onSaved }: BodyProps) {
         <Input
           required
           maxLength={120}
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
+          name="voucher-issuer"
           value={state.issuer}
           onChange={(e) => setState((s) => ({ ...s, issuer: e.target.value }))}
         />
@@ -207,12 +211,19 @@ function VoucherFormBody({ scope, initial, onClose, onSaved }: BodyProps) {
       >
         <div className="relative">
           <Input
-            type={showCode ? 'text' : 'password'}
+            type="text"
             maxLength={120}
             autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
+            name="voucher-code"
             value={state.code}
             onChange={(e) => setState((s) => ({ ...s, code: e.target.value }))}
-            style={{ paddingRight: '2.75rem' }}
+            style={{
+              paddingRight: '2.75rem',
+              WebkitTextSecurity: showCode ? 'none' : 'disc',
+              textSecurity: showCode ? 'none' : 'disc',
+            } as CSSProperties}
           />
           <button
             type="button"
