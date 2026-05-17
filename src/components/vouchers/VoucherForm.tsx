@@ -17,6 +17,8 @@ interface Props {
   scope: RecordScope
   initial?: Voucher | null
   issuerSuggestions?: string[]
+  duplicateFrom?: Voucher | null
+  onDuplicate?: (v: Voucher) => void
 }
 
 interface FormState {
@@ -33,17 +35,17 @@ interface FormState {
   notes: string
 }
 
-function initialState(v?: Voucher | null): FormState {
+function initialState(v?: Voucher | null, isDuplicate = false): FormState {
   return {
     type: v?.type ?? 'regalo',
     issuer: v?.issuer ?? '',
-    code: v?.code ?? '',
+    code: isDuplicate ? '' : v?.code ?? '',
     amount: v ? String(v.amount) : '',
     is_percentage: v?.is_percentage ?? false,
     currency: v?.currency ?? 'EUR',
     issue_date: v?.issue_date ?? '',
     expiry_date: v?.expiry_date ?? '',
-    status: v?.status ?? 'available',
+    status: isDuplicate ? 'available' : v?.status ?? 'available',
     person_id: v?.person_id ?? '',
     notes: v?.notes ?? '',
   }
@@ -56,20 +58,30 @@ export function VoucherForm({
   scope,
   initial,
   issuerSuggestions,
+  duplicateFrom,
+  onDuplicate,
 }: Props) {
+  const title = initial
+    ? 'Modifica buono'
+    : duplicateFrom
+    ? 'Duplica buono'
+    : 'Nuovo buono'
+  const key = initial
+    ? `edit-${initial.id}`
+    : duplicateFrom
+    ? `dup-${duplicateFrom.id}`
+    : 'new'
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title={initial ? 'Modifica buono' : 'Nuovo buono'}
-    >
+    <Modal open={open} onClose={onClose} title={title}>
       <VoucherFormBody
-        key={initial?.id ?? 'new'}
+        key={key}
         scope={scope}
         initial={initial}
+        duplicateFrom={duplicateFrom}
         onClose={onClose}
         onSaved={onSaved}
         issuerSuggestions={issuerSuggestions ?? []}
+        onDuplicate={onDuplicate}
       />
     </Modal>
   )
@@ -78,22 +90,29 @@ export function VoucherForm({
 interface BodyProps {
   scope: RecordScope
   initial?: Voucher | null
+  duplicateFrom?: Voucher | null
   onClose: () => void
   onSaved: () => void
   issuerSuggestions: string[]
+  onDuplicate?: (v: Voucher) => void
 }
 
 function VoucherFormBody({
   scope,
   initial,
+  duplicateFrom,
   onClose,
   onSaved,
   issuerSuggestions,
+  onDuplicate,
 }: BodyProps) {
-  const [state, setState] = useState<FormState>(() => initialState(initial))
+  const source = initial ?? duplicateFrom ?? null
+  const [state, setState] = useState<FormState>(() =>
+    initialState(source, !initial && Boolean(duplicateFrom)),
+  )
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [notesExpanded, setNotesExpanded] = useState(() => Boolean(initial?.notes))
+  const [notesExpanded, setNotesExpanded] = useState(() => Boolean(source?.notes))
   const [showCode, setShowCode] = useState(false)
   const [issuerFocused, setIssuerFocused] = useState(false)
   const issuerBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -403,15 +422,28 @@ function VoucherFormBody({
 
       <div className="flex items-center justify-between gap-2 pt-2">
         {initial ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={handleDelete}
-            disabled={submitting}
-          >
-            Elimina
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleDelete}
+              disabled={submitting}
+            >
+              Elimina
+            </Button>
+            {onDuplicate && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => onDuplicate(initial)}
+                disabled={submitting}
+              >
+                Duplica
+              </Button>
+            )}
+          </div>
         ) : (
           <span />
         )}

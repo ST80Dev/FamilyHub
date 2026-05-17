@@ -58,6 +58,7 @@ export default function Vouchers() {
   )
   const [editing, setEditing] = useState<Voucher | null>(null)
   const [creating, setCreating] = useState(false)
+  const [duplicating, setDuplicating] = useState<Voucher | null>(null)
   const [showUsed, setShowUsed] = useState(false)
 
   const buckets = useMemo(() => bucketize(vouchers), [vouchers])
@@ -275,15 +276,22 @@ export default function Vouchers() {
       )}
 
       <VoucherForm
-        open={creating || editing !== null}
+        open={creating || editing !== null || duplicating !== null}
         onClose={() => {
           setCreating(false)
           setEditing(null)
+          setDuplicating(null)
         }}
         onSaved={refresh}
         scope={scope}
         initial={editing}
         issuerSuggestions={issuerSuggestions}
+        duplicateFrom={duplicating}
+        onDuplicate={(v) => {
+          setEditing(null)
+          setCreating(false)
+          setDuplicating(v)
+        }}
       />
     </AppShell>
   )

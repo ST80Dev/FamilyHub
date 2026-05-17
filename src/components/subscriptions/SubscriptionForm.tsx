@@ -52,6 +52,8 @@ interface Props {
   onSaved: () => void
   scope: RecordScope
   initial?: Subscription | null
+  duplicateFrom?: Subscription | null
+  onDuplicate?: (s: Subscription) => void
 }
 
 interface FormState {
@@ -147,19 +149,29 @@ export function SubscriptionForm({
   onSaved,
   scope,
   initial,
+  duplicateFrom,
+  onDuplicate,
 }: Props) {
+  const title = initial
+    ? 'Modifica abbonamento'
+    : duplicateFrom
+    ? 'Duplica abbonamento'
+    : 'Nuovo abbonamento'
+  const key = initial
+    ? `edit-${initial.id}`
+    : duplicateFrom
+    ? `dup-${duplicateFrom.id}`
+    : 'new'
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title={initial ? 'Modifica abbonamento' : 'Nuovo abbonamento'}
-    >
+    <Modal open={open} onClose={onClose} title={title}>
       <SubscriptionFormBody
-        key={initial?.id ?? 'new'}
+        key={key}
         scope={scope}
         initial={initial}
+        duplicateFrom={duplicateFrom}
         onClose={onClose}
         onSaved={onSaved}
+        onDuplicate={onDuplicate}
       />
     </Modal>
   )
@@ -168,21 +180,26 @@ export function SubscriptionForm({
 interface BodyProps {
   scope: RecordScope
   initial?: Subscription | null
+  duplicateFrom?: Subscription | null
   onClose: () => void
   onSaved: () => void
+  onDuplicate?: (s: Subscription) => void
 }
 
 function SubscriptionFormBody({
   scope,
   initial,
+  duplicateFrom,
   onClose,
   onSaved,
+  onDuplicate,
 }: BodyProps) {
-  const [state, setState] = useState<FormState>(() => initialState(initial))
+  const source = initial ?? duplicateFrom ?? null
+  const [state, setState] = useState<FormState>(() => initialState(source))
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notesExpanded, setNotesExpanded] = useState(() =>
-    Boolean(initial?.notes),
+    Boolean(source?.notes),
   )
   const { paymentMethods } = usePaymentMethods()
   const { persons } = usePersons()
@@ -591,15 +608,28 @@ function SubscriptionFormBody({
 
       <div className="flex items-center justify-between gap-2 pt-2">
         {initial ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={handleDelete}
-            disabled={submitting}
-          >
-            Elimina
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleDelete}
+              disabled={submitting}
+            >
+              Elimina
+            </Button>
+            {onDuplicate && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => onDuplicate(initial)}
+                disabled={submitting}
+              >
+                Duplica
+              </Button>
+            )}
+          </div>
         ) : (
           <span />
         )}

@@ -17,6 +17,8 @@ interface Props {
   onSaved: () => void
   scope: RecordScope
   initial?: Deadline | null
+  duplicateFrom?: Deadline | null
+  onDuplicate?: (d: Deadline) => void
 }
 
 interface FormState {
@@ -49,19 +51,35 @@ function initialState(d?: Deadline | null): FormState {
   }
 }
 
-export function DeadlineForm({ open, onClose, onSaved, scope, initial }: Props) {
+export function DeadlineForm({
+  open,
+  onClose,
+  onSaved,
+  scope,
+  initial,
+  duplicateFrom,
+  onDuplicate,
+}: Props) {
+  const title = initial
+    ? 'Modifica scadenza'
+    : duplicateFrom
+    ? 'Duplica scadenza'
+    : 'Nuova scadenza'
+  const key = initial
+    ? `edit-${initial.id}`
+    : duplicateFrom
+    ? `dup-${duplicateFrom.id}`
+    : 'new'
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title={initial ? 'Modifica scadenza' : 'Nuova scadenza'}
-    >
+    <Modal open={open} onClose={onClose} title={title}>
       <DeadlineFormBody
-        key={initial?.id ?? 'new'}
+        key={key}
         scope={scope}
         initial={initial}
+        duplicateFrom={duplicateFrom}
         onClose={onClose}
         onSaved={onSaved}
+        onDuplicate={onDuplicate}
       />
     </Modal>
   )
@@ -70,16 +88,26 @@ export function DeadlineForm({ open, onClose, onSaved, scope, initial }: Props) 
 interface BodyProps {
   scope: RecordScope
   initial?: Deadline | null
+  duplicateFrom?: Deadline | null
   onClose: () => void
   onSaved: () => void
+  onDuplicate?: (d: Deadline) => void
 }
 
-function DeadlineFormBody({ scope, initial, onClose, onSaved }: BodyProps) {
-  const [state, setState] = useState<FormState>(() => initialState(initial))
+function DeadlineFormBody({
+  scope,
+  initial,
+  duplicateFrom,
+  onClose,
+  onSaved,
+  onDuplicate,
+}: BodyProps) {
+  const source = initial ?? duplicateFrom ?? null
+  const [state, setState] = useState<FormState>(() => initialState(source))
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notesExpanded, setNotesExpanded] = useState(() =>
-    Boolean(initial?.notes),
+    Boolean(source?.notes),
   )
   const { persons } = usePersons()
   const { paymentMethods } = usePaymentMethods()
@@ -326,15 +354,28 @@ function DeadlineFormBody({ scope, initial, onClose, onSaved }: BodyProps) {
 
         <div className="flex items-center justify-between gap-2 pt-2">
           {initial ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleDelete}
-              disabled={submitting}
-            >
-              Elimina
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleDelete}
+                disabled={submitting}
+              >
+                Elimina
+              </Button>
+              {onDuplicate && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDuplicate(initial)}
+                  disabled={submitting}
+                >
+                  Duplica
+                </Button>
+              )}
+            </div>
           ) : (
             <span />
           )}

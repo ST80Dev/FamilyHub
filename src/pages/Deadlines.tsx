@@ -36,6 +36,7 @@ export default function Deadlines() {
   )
   const [editing, setEditing] = useState<Deadline | null>(null)
   const [creating, setCreating] = useState(false)
+  const [duplicating, setDuplicating] = useState<Deadline | null>(null)
   const [postponing, setPostponing] = useState<Deadline | null>(null)
 
   const grouped = useMemo(() => {
@@ -152,14 +153,21 @@ export default function Deadlines() {
       )}
 
       <DeadlineForm
-        open={creating || editing !== null}
+        open={creating || editing !== null || duplicating !== null}
         onClose={() => {
           setCreating(false)
           setEditing(null)
+          setDuplicating(null)
         }}
         onSaved={refresh}
         scope={scope}
         initial={editing}
+        duplicateFrom={duplicating}
+        onDuplicate={(d) => {
+          setEditing(null)
+          setCreating(false)
+          setDuplicating(d)
+        }}
       />
 
       <PostponeDeadlineModal
