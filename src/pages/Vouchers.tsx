@@ -74,6 +74,19 @@ export default function Vouchers() {
 
   const activeCount = buckets.available.length + buckets.expiring.length
 
+  const issuerSuggestions = useMemo(() => {
+    const set = new Map<string, string>()
+    for (const v of vouchers) {
+      const raw = v.issuer?.trim()
+      if (!raw) continue
+      const key = raw.toLowerCase()
+      if (!set.has(key)) set.set(key, raw)
+    }
+    return Array.from(set.values()).sort((a, b) =>
+      a.localeCompare(b, 'it', { sensitivity: 'base' }),
+    )
+  }, [vouchers])
+
   if (famLoading || !user) return null
 
   const scope = recordOwnership(family, user.id)
@@ -270,6 +283,7 @@ export default function Vouchers() {
         onSaved={refresh}
         scope={scope}
         initial={editing}
+        issuerSuggestions={issuerSuggestions}
       />
     </AppShell>
   )
