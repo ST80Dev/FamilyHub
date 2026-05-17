@@ -30,6 +30,7 @@ export default function Subscriptions() {
   )
   const [editing, setEditing] = useState<Subscription | null>(null)
   const [creating, setCreating] = useState(false)
+  const [duplicating, setDuplicating] = useState<Subscription | null>(null)
 
   const { active, paused, cancelled } = useMemo(() => {
     const out: Record<'active' | 'paused' | 'cancelled', Subscription[]> = {
@@ -201,14 +202,21 @@ export default function Subscriptions() {
       )}
 
       <SubscriptionForm
-        open={creating || editing !== null}
+        open={creating || editing !== null || duplicating !== null}
         onClose={() => {
           setCreating(false)
           setEditing(null)
+          setDuplicating(null)
         }}
         onSaved={refresh}
         scope={scope}
         initial={editing}
+        duplicateFrom={duplicating}
+        onDuplicate={(s) => {
+          setEditing(null)
+          setCreating(false)
+          setDuplicating(s)
+        }}
       />
     </AppShell>
   )
