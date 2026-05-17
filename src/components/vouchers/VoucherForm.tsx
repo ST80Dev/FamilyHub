@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type { CSSProperties, FormEvent } from 'react'
 import { Button, Field, Input, Modal, Select, Textarea } from '../ui'
 import { supabase } from '../../lib/supabase'
@@ -16,6 +16,7 @@ interface Props {
   onSaved: () => void
   scope: RecordScope
   initial?: Voucher | null
+  issuerSuggestions?: string[]
 }
 
 interface FormState {
@@ -48,7 +49,14 @@ function initialState(v?: Voucher | null): FormState {
   }
 }
 
-export function VoucherForm({ open, onClose, onSaved, scope, initial }: Props) {
+export function VoucherForm({
+  open,
+  onClose,
+  onSaved,
+  scope,
+  initial,
+  issuerSuggestions,
+}: Props) {
   return (
     <Modal
       open={open}
@@ -61,6 +69,7 @@ export function VoucherForm({ open, onClose, onSaved, scope, initial }: Props) {
         initial={initial}
         onClose={onClose}
         onSaved={onSaved}
+        issuerSuggestions={issuerSuggestions ?? []}
       />
     </Modal>
   )
@@ -71,15 +80,35 @@ interface BodyProps {
   initial?: Voucher | null
   onClose: () => void
   onSaved: () => void
+  issuerSuggestions: string[]
 }
 
-function VoucherFormBody({ scope, initial, onClose, onSaved }: BodyProps) {
+function VoucherFormBody({
+  scope,
+  initial,
+  onClose,
+  onSaved,
+  issuerSuggestions,
+}: BodyProps) {
   const [state, setState] = useState<FormState>(() => initialState(initial))
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notesExpanded, setNotesExpanded] = useState(() => Boolean(initial?.notes))
   const [showCode, setShowCode] = useState(false)
+  const [issuerFocused, setIssuerFocused] = useState(false)
+  const issuerBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { persons } = usePersons()
+
+  const filteredIssuers = useMemo(() => {
+    const q = state.issuer.trim().toLowerCase()
+    if (!q) return []
+    return issuerSuggestions
+      .filter((s) => {
+        const lower = s.toLowerCase()
+        return lower.includes(q) && lower !== q
+      })
+      .slice(0, 6)
+  }, [state.issuer, issuerSuggestions])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -193,16 +222,55 @@ function VoucherFormBody({ scope, initial, onClose, onSaved }: BodyProps) {
       </div>
 
       <Field label="Emittente" hint="Es. Amazon, IKEA, Decathlon, INPS">
-        <Input
-          required
-          maxLength={120}
-          autoComplete="off"
-          autoCorrect="off"
-          spellCheck={false}
-          name="voucher-issuer"
-          value={state.issuer}
-          onChange={(e) => setState((s) => ({ ...s, issuer: e.target.value }))}
-        />
+        <div className="relative">
+          <Input
+            required
+            maxLength={120}
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
+            name="voucher-issuer"
+            value={state.issuer}
+            onChange={(e) => setState((s) => ({ ...s, issuer: e.target.value }))}
+            onFocus={() => {
+              if (issuerBlurTimer.current) {
+                clearTimeout(issuerBlurTimer.current)
+                issuerBlurTimer.current = null
+              }
+              setIssuerFocused(true)
+            }}
+            onBlur={() => {
+              issuerBlurTimer.current = setTimeout(
+                () => setIssuerFocused(false),
+                120,
+              )
+            }}
+          />
+          {issuerFocused && filteredIssuers.length > 0 && (
+            <ul
+              role="listbox"
+              className="absolute left-0 right-0 top-full z-10 mt-1 max-h-48 overflow-y-auto rounded-2xl bg-[color:var(--surface)] border border-[color:var(--line)] clay-card py-1 shadow-lg"
+            >
+              {filteredIssuers.map((s) => (
+                <li key={s}>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected="false"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      setState((st) => ({ ...st, issuer: s }))
+                      setIssuerFocused(false)
+                    }}
+                    className="block w-full px-4 py-2 text-left text-sm text-ink hover:bg-[color:var(--candy-peach)]/30"
+                  >
+                    {s}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </Field>
 
       <Field
