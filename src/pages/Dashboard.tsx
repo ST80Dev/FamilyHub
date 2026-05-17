@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AppShell } from '../components/layout/AppShell'
 import { Button, Card, Chip } from '../components/ui'
@@ -8,6 +8,7 @@ import { useSubscriptions } from '../hooks/useSubscriptions'
 import { useVouchers } from '../hooks/useVouchers'
 import { usePersons } from '../hooks/usePersons'
 import { DeadlineCard } from '../components/deadlines/DeadlineCard'
+import { PostponeDeadlineModal } from '../components/deadlines/PostponeDeadlineModal'
 import { VoucherCard } from '../components/vouchers/VoucherCard'
 import { WeeklyExpenses } from '../components/payment/WeeklyExpenses'
 import { useAuth } from '../hooks/useAuth'
@@ -22,7 +23,7 @@ import {
   effectiveMonthlyAmount,
 } from '../lib/subscriptionForecast'
 import { formatCurrency, formatDate } from '../lib/format'
-import type { Subscription } from '../types'
+import type { Deadline, Subscription } from '../types'
 
 const SUB_CARD_TONES = [
   'candy-peach',
@@ -57,10 +58,11 @@ function firstName(input?: string | null): string {
 export default function Dashboard() {
   const { user } = useAuth()
   const { family, membership, loading: famLoading } = useFamily()
-  const { deadlines, loading: dlLoading } = useDeadlines()
+  const { deadlines, loading: dlLoading, refresh: refreshDeadlines } = useDeadlines()
   const { subscriptions: allSubs, loading: subLoading } = useSubscriptions()
   const { vouchers, refresh: refreshVouchers } = useVouchers()
   const { persons } = usePersons()
+  const [postponing, setPostponing] = useState<Deadline | null>(null)
   const personById = useMemo(
     () => new Map(persons.map((p) => [p.id, p])),
     [persons],
@@ -74,12 +76,19 @@ export default function Dashboard() {
     [allSubs],
   )
 
+  const overdueDeadlines = useMemo(() => {
+    return deadlines.filter((d) => {
+      if (d.status === 'done') return false
+      return urgencyBucket(d.due_date) === 'overdue'
+    })
+  }, [deadlines])
+
   const upcoming = useMemo(() => {
     return deadlines
       .filter((d) => {
         if (d.status === 'done') return false
         const u = urgencyBucket(d.due_date)
-        return u !== 'later'
+        return u !== 'later' && u !== 'overdue'
       })
       .slice(0, 4)
   }, [deadlines])
@@ -89,7 +98,7 @@ export default function Dashboard() {
     for (const d of deadlines) {
       if (d.status === 'done') continue
       const u = urgencyBucket(d.due_date)
-      if (u === 'overdue' || u === 'within7') out.red++
+      if (u === 'within7') out.red++
       else if (u === 'within30') out.yellow++
       else if (u === 'within60') out.green++
     }
@@ -117,6 +126,18 @@ export default function Dashboard() {
       })
       .slice(0, 3)
   }, [vouchers])
+
+  const expiredVouchers = useMemo(() => {
+    return vouchers
+      .filter((v) => {
+        if (v.status === 'used') return false
+        if (v.status === 'expired') return true
+        if (!v.expiry_date) return false
+        return daysUntil(v.expiry_date) < 0
+      })
+  }, [vouchers])
+
+  const overdueTotal = overdueDeadlines.length + expiredVouchers.length
 
   const cancellationAlerts = useMemo(() => {
     const items: { sub: Subscription; alertDate: string; daysToNotice: number }[] = []
@@ -164,6 +185,75 @@ export default function Dashboard() {
             : `${totalUpcoming} ${totalUpcoming === 1 ? 'cosa da tenere d’occhio' : 'cose da tenere d’occhio'} nei prossimi 60 giorni`}
         </p>
       </section>
+
+      {/* In ritardo — banner in evidenza */}
+      {overdueTotal > 0 && (
+        <section className="mt-5">
+          <Card variant="urg-red" padding="lg" radius="xl">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-[11px] font-bold uppercase tracking-[0.08em] opacity-90">
+                  In ritardo
+                </div>
+                <div className="font-display mt-1 text-2xl font-bold leading-tight">
+                  {overdueTotal}{' '}
+                  {overdueTotal === 1 ? 'cosa passata' : 'cose passate'}
+                </div>
+                <p className="mt-1.5 text-xs leading-snug opacity-90">
+                  {overdueDeadlines.length > 0 && (
+                    <>
+                      {overdueDeadlines.length}{' '}
+                      {overdueDeadlines.length === 1 ? 'scadenza' : 'scadenze'}
+                    </>
+                  )}
+                  {overdueDeadlines.length > 0 && expiredVouchers.length > 0 && ' · '}
+                  {expiredVouchers.length > 0 && (
+                    <>
+                      {expiredVouchers.length}{' '}
+                      {expiredVouchers.length === 1 ? 'buono scaduto' : 'buoni scaduti'}
+                    </>
+                  )}
+                </p>
+              </div>
+              <span className="text-3xl leading-none" aria-hidden>
+                ⚠️
+              </span>
+            </div>
+          </Card>
+
+          {overdueDeadlines.length > 0 && (
+            <div className="mt-3 space-y-3">
+              {overdueDeadlines.slice(0, 3).map((d) => (
+                <DeadlineCard
+                  key={d.id}
+                  deadline={d}
+                  person={d.person_id ? personById.get(d.person_id) : null}
+                  onPostpone={setPostponing}
+                />
+              ))}
+              {overdueDeadlines.length > 3 && (
+                <Link
+                  to="/scadenze"
+                  className="block rounded-full bg-[color:var(--surface-2)] px-3 py-2 text-center text-xs font-semibold text-ink-soft hover:text-ink"
+                >
+                  +{overdueDeadlines.length - 3} altre scadenze in ritardo →
+                </Link>
+              )}
+            </div>
+          )}
+
+          {expiredVouchers.length > 0 && overdueDeadlines.length === 0 && (
+            <div className="mt-3">
+              <Link
+                to="/buoni"
+                className="block rounded-full bg-[color:var(--surface-2)] px-3 py-2 text-center text-xs font-semibold text-ink-soft hover:text-ink"
+              >
+                Vedi buoni scaduti →
+              </Link>
+            </div>
+          )}
+        </section>
+      )}
 
       {!family && !famLoading && (
         <Card variant="surface" padding="md" className="mt-5">
@@ -410,6 +500,13 @@ export default function Dashboard() {
           </Card>
         </section>
       )}
+
+      <PostponeDeadlineModal
+        open={postponing !== null}
+        deadline={postponing}
+        onClose={() => setPostponing(null)}
+        onSaved={refreshDeadlines}
+      />
     </AppShell>
   )
 }

@@ -36,6 +36,17 @@ function addMonths(d: Date, months: number): Date {
   return r
 }
 
+function addDays(d: Date, days: number): Date {
+  const r = new Date(d)
+  r.setUTCDate(r.getUTCDate() + days)
+  return r
+}
+
+/** Restituisce una data ISO spostata di N giorni rispetto al riferimento. */
+export function shiftISO(date: ISODate, days: number): ISODate {
+  return toISO(addDays(parseISO(date), days))
+}
+
 /** Età compiuta in anni a una data di riferimento (default oggi). */
 export function ageAt(birthDate: ISODate, ref: ISODate = todayISO()): number {
   const b = parseISO(birthDate)

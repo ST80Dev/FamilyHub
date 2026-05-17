@@ -8,6 +8,7 @@ import { useDeadlines } from '../hooks/useDeadlines'
 import { usePersons } from '../hooks/usePersons'
 import { DeadlineCard } from '../components/deadlines/DeadlineCard'
 import { DeadlineForm } from '../components/deadlines/DeadlineForm'
+import { PostponeDeadlineModal } from '../components/deadlines/PostponeDeadlineModal'
 import { urgencyBucket } from '../lib/deadlineEngine'
 import { recordOwnership } from '../lib/ownership'
 import type { Deadline } from '../types'
@@ -35,6 +36,7 @@ export default function Deadlines() {
   )
   const [editing, setEditing] = useState<Deadline | null>(null)
   const [creating, setCreating] = useState(false)
+  const [postponing, setPostponing] = useState<Deadline | null>(null)
 
   const grouped = useMemo(() => {
     const out: Record<Group, Deadline[]> = {
@@ -114,14 +116,24 @@ export default function Deadlines() {
           {GROUP_ORDER.map((g) => {
             const items = grouped[g]
             if (items.length === 0) return null
+            const isOverdueGroup = g === 'overdue'
             return (
               <section key={g}>
-                <h2 className="font-display mb-2 px-1 text-lg font-bold text-ink">
-                  {GROUP_LABEL[g]}{' '}
-                  <span className="text-sm font-medium text-ink-soft">
-                    · {items.length}
-                  </span>
-                </h2>
+                {isOverdueGroup ? (
+                  <div className="mb-3 flex items-center gap-2 rounded-full candy-red-grad px-3 py-1.5 text-white">
+                    <span aria-hidden>⚠️</span>
+                    <h2 className="font-display text-sm font-bold uppercase tracking-wider">
+                      {GROUP_LABEL[g]} · {items.length}
+                    </h2>
+                  </div>
+                ) : (
+                  <h2 className="font-display mb-2 px-1 text-lg font-bold text-ink">
+                    {GROUP_LABEL[g]}{' '}
+                    <span className="text-sm font-medium text-ink-soft">
+                      · {items.length}
+                    </span>
+                  </h2>
+                )}
                 <div className="space-y-3">
                   {items.map((d) => (
                     <DeadlineCard
@@ -129,6 +141,7 @@ export default function Deadlines() {
                       deadline={d}
                       person={d.person_id ? personById.get(d.person_id) : null}
                       onClick={() => setEditing(d)}
+                      onPostpone={setPostponing}
                     />
                   ))}
                 </div>
@@ -147,6 +160,13 @@ export default function Deadlines() {
         onSaved={refresh}
         scope={scope}
         initial={editing}
+      />
+
+      <PostponeDeadlineModal
+        open={postponing !== null}
+        deadline={postponing}
+        onClose={() => setPostponing(null)}
+        onSaved={refresh}
       />
     </AppShell>
   )

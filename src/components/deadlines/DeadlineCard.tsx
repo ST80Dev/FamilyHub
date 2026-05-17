@@ -1,3 +1,4 @@
+import type { MouseEvent } from 'react'
 import type { Deadline, Person } from '../../types'
 import { Card, IconTile, Badge } from '../ui'
 import { deadlineMeta } from '../../lib/deadlineMeta'
@@ -9,6 +10,7 @@ interface Props {
   deadline: Deadline
   person?: Person | null
   onClick?: () => void
+  onPostpone?: (deadline: Deadline) => void
 }
 
 function whenLabel(dueDate: string): string {
@@ -26,11 +28,17 @@ function urgencyTone(due: string) {
   return 'green' as const
 }
 
-export function DeadlineCard({ deadline, person, onClick }: Props) {
+export function DeadlineCard({ deadline, person, onClick, onPostpone }: Props) {
   const meta = deadlineMeta(deadline.type)
   const title = deadline.title?.trim() || meta.label
   const when = whenLabel(deadline.due_date)
   const tone = urgencyTone(deadline.due_date)
+  const isOverdue = urgencyBucket(deadline.due_date) === 'overdue'
+
+  function handlePostpone(e: MouseEvent<HTMLButtonElement>) {
+    e.stopPropagation()
+    onPostpone?.(deadline)
+  }
 
   return (
     <Card
@@ -82,6 +90,15 @@ export function DeadlineCard({ deadline, person, onClick }: Props) {
         <Badge tone={tone} size="sm">
           {when}
         </Badge>
+        {isOverdue && onPostpone && (
+          <button
+            type="button"
+            onClick={handlePostpone}
+            className="rounded-full bg-[color:var(--surface-2)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-ink-soft hover:text-ink"
+          >
+            ⏭ posponi
+          </button>
+        )}
       </div>
     </Card>
   )
